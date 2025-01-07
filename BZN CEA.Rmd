@@ -1,0 +1,92 @@
+---
+title: "BZN CEA"
+author: "Philip Wikman"
+date: "2025-01-07"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Paquetes necesarios
+library(dplyr)
+library(ggplot2)
+```
+
+
+```{r}
+# Definir parámetros del modelo
+horizon <- 20            # Horizonte temporal (en años)
+cycle_length <- 1        # Longitud de cada ciclo (en años)
+discount_rate <- 0.03    # Tasa de descuento anual
+
+# Estados de salud
+states <- c("Acute", "Chronic_Asymptomatic", "Cardiac", "Digestive", "Death")
+
+# Probabilidades de transición entre estados
+transition_matrix <- matrix(
+  c(0.80, 0.15, 0.03, 0.01, 0.01,  # De Acute
+    0.00, 0.85, 0.10, 0.03, 0.02,  # De Chronic_Asymptomatic
+    0.00, 0.00, 0.85, 0.10, 0.05,  # De Cardiac
+    0.00, 0.00, 0.00, 0.85, 0.15,  # De Digestive
+    0.00, 0.00, 0.00, 0.00, 1.00), # De Death
+  byrow = TRUE,
+  nrow = length(states),
+  dimnames = list(states, states)
+)
+
+# Costos y utilidades asociadas a cada estado
+costs <- c(Acute = 500, Chronic_Asymptomatic = 100, Cardiac = 2000, Digestive = 1500, Death = 0)
+utilities <- c(Acute = 0.80, Chronic_Asymptomatic = 0.90, Cardiac = 0.50, Digestive = 0.60, Death = 0.00)
+
+# Estado inicial de la cohorte
+initial_cohort <- c(1, 0, 0, 0, 0)  # Toda la cohorte inicia en "Acute"
+
+# Crear matrices para almacenar resultados
+state_counts <- matrix(0, nrow = horizon + 1, ncol = length(states))
+state_counts[1, ] <- initial_cohort
+total_costs <- numeric(horizon)
+total_QALYs <- numeric(horizon)
+
+# Simulación del modelo de Markov
+for (cycle in 1:horizon) {
+  # Distribución de la cohorte al final del ciclo
+  state_counts[cycle + 1, ] <- state_counts[cycle, ] %*% transition_matrix
+  
+  # Costos y QALYs en este ciclo
+  total_costs[cycle] <- sum(state_counts[cycle, ] * costs)
+  total_QALYs[cycle] <- sum(state_counts[cycle, ] * utilities)
+}
+
+# Descuento de costos y QALYs
+discount_factors <- (1 / (1 + discount_rate))^(0:(horizon - 1))
+discounted_costs <- total_costs * discount_factors
+discounted_QALYs <- total_QALYs * discount_factors
+
+# Resultados acumulados
+total_cost <- sum(discounted_costs)
+total_QALY <- sum(discounted_QALYs)
+
+# Imprimir resultados
+cat("Costos totales descontados: $", round(total_cost, 2), "\n")
+cat("QALYs totales descontados: ", round(total_QALY, 2), "\n")
+
+# Visualización de la progresión de la cohorte
+state_counts_df <- as.data.frame(state_counts)
+colnames(state_counts_df) <- states
+state_counts_df$Cycle <- 0:horizon
+state_counts_long <- state_counts_df %>%
+  tidyr::pivot_longer(cols = -Cycle, names_to = "State", values_to = "Count")
+
+ggplot(state_counts_long, aes(x = Cycle, y = Count, fill = State)) +
+  geom_area(alpha = 0.6) +
+  labs(
+    title = "Progresión de la cohorte en el modelo de Markov",
+    x = "Ciclo (años)",
+    y = "Número de individuos",
+    fill = "Estado"
+  ) +
+  theme_minimal()
+```
