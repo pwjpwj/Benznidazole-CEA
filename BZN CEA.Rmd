@@ -13,6 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 # Paquetes necesarios
 library(dplyr)
 library(ggplot2)
+library(MASS)
 ```
 
 
@@ -23,70 +24,370 @@ cycle_length <- 1        # Longitud de cada ciclo (en años)
 discount_rate <- 0.03    # Tasa de descuento anual
 
 # Estados de salud
-states <- c("Acute", "Chronic_Asymptomatic", "Cardiac", "Digestive", "Death")
+states <- c("Chronic_Asymptomatic", "Cardiac", "Digestive", "Death")
 
-# Probabilidades de transición entre estados
-transition_matrix <- matrix(
-  c(0.80, 0.15, 0.03, 0.01, 0.01,  # De Acute
-    0.00, 0.85, 0.10, 0.03, 0.02,  # De Chronic_Asymptomatic
-    0.00, 0.00, 0.85, 0.10, 0.05,  # De Cardiac
-    0.00, 0.00, 0.00, 0.85, 0.15,  # De Digestive
-    0.00, 0.00, 0.00, 0.00, 1.00), # De Death
+# Probabilidades de transición para el brazo SIN intervención
+transition_matrix_no_treatment <- matrix(
+  c(0.85, 0.10, 0.03, 0.02,  # De Chronic_Asymptomatic
+    0.00, 0.85, 0.10, 0.05,  # De Cardiac
+    0.00, 0.00, 0.85, 0.15,  # De Digestive
+    0.00, 0.00, 0.00, 1.00), # De Death
+  byrow = TRUE,
+  nrow = length(states),
+  dimnames = list(states, states)
+)
+
+# Probabilidades de transición para el brazo CON tratamiento (Benznidazol)
+transition_matrix_treatment <- matrix(
+  c(0.92, 0.05, 0.02, 0.01,  # De Chronic_Asymptomatic (mayor estabilidad)
+    0.00, 0.90, 0.07, 0.03,  # De Cardiac (menor progresión)
+    0.00, 0.00, 0.90, 0.10,  # De Digestive (menor progresión)
+    0.00, 0.00, 0.00, 1.00), # De Death
   byrow = TRUE,
   nrow = length(states),
   dimnames = list(states, states)
 )
 
 # Costos y utilidades asociadas a cada estado
-costs <- c(Acute = 500, Chronic_Asymptomatic = 100, Cardiac = 2000, Digestive = 1500, Death = 0)
-utilities <- c(Acute = 0.80, Chronic_Asymptomatic = 0.90, Cardiac = 0.50, Digestive = 0.60, Death = 0.00)
+costs <- c(Chronic_Asymptomatic = 100, Cardiac = 2000, Digestive = 1500, Death = 0)
+utilities <- c(Chronic_Asymptomatic = 0.90, Cardiac = 0.50, Digestive = 0.60, Death = 0.00)
 
-# Estado inicial de la cohorte
-initial_cohort <- c(1, 0, 0, 0, 0)  # Toda la cohorte inicia en "Acute"
+# Costo adicional del tratamiento con benznidazol
+treatment_cost <- 300  # Costo único del tratamiento por paciente (USD)
+
+# Estado inicial de la cohorte (todos inician en Chronic_Asymptomatic)
+initial_cohort <- c(1, 0, 0, 0)  # 100% comienza en Chronic_Asymptomatic
 
 # Crear matrices para almacenar resultados
-state_counts <- matrix(0, nrow = horizon + 1, ncol = length(states))
-state_counts[1, ] <- initial_cohort
-total_costs <- numeric(horizon)
-total_QALYs <- numeric(horizon)
+state_counts_no_treatment <- matrix(0, nrow = horizon + 1, ncol = length(states))
+state_counts_treatment <- matrix(0, nrow = horizon + 1, ncol = length(states))
+state_counts_no_treatment[1, ] <- initial_cohort
+state_counts_treatment[1, ] <- initial_cohort
+
+total_costs_no_treatment <- numeric(horizon)
+total_costs_treatment <- numeric(horizon)
+total_QALYs_no_treatment <- numeric(horizon)
+total_QALYs_treatment <- numeric(horizon)
 
 # Simulación del modelo de Markov
 for (cycle in 1:horizon) {
-  # Distribución de la cohorte al final del ciclo
-  state_counts[cycle + 1, ] <- state_counts[cycle, ] %*% transition_matrix
+  # Sin tratamiento
+  state_counts_no_treatment[cycle + 1, ] <- state_counts_no_treatment[cycle, ] %*% transition_matrix_no_treatment
+  total_costs_no_treatment[cycle] <- sum(state_counts_no_treatment[cycle, ] * costs)
+  total_QALYs_no_treatment[cycle] <- sum(state_counts_no_treatment[cycle, ] * utilities)
   
-  # Costos y QALYs en este ciclo
-  total_costs[cycle] <- sum(state_counts[cycle, ] * costs)
-  total_QALYs[cycle] <- sum(state_counts[cycle, ] * utilities)
+  # Con tratamiento
+  state_counts_treatment[cycle + 1, ] <- state_counts_treatment[cycle, ] %*% transition_matrix_treatment
+  total_costs_treatment[cycle] <- sum(state_counts_treatment[cycle, ] * costs)
+  total_QALYs_treatment[cycle] <- sum(state_counts_treatment[cycle, ] * utilities)
 }
+
+# Agregar el costo único del tratamiento en el primer ciclo para el brazo de intervención
+total_costs_treatment[1] <- total_costs_treatment[1] + sum(initial_cohort) * treatment_cost
 
 # Descuento de costos y QALYs
 discount_factors <- (1 / (1 + discount_rate))^(0:(horizon - 1))
-discounted_costs <- total_costs * discount_factors
-discounted_QALYs <- total_QALYs * discount_factors
+discounted_costs_no_treatment <- total_costs_no_treatment * discount_factors
+discounted_costs_treatment <- total_costs_treatment * discount_factors
+discounted_QALYs_no_treatment <- total_QALYs_no_treatment * discount_factors
+discounted_QALYs_treatment <- total_QALYs_treatment * discount_factors
 
 # Resultados acumulados
-total_cost <- sum(discounted_costs)
-total_QALY <- sum(discounted_QALYs)
+total_cost_no_treatment <- sum(discounted_costs_no_treatment)
+total_cost_treatment <- sum(discounted_costs_treatment)
+total_QALY_no_treatment <- sum(discounted_QALYs_no_treatment)
+total_QALY_treatment <- sum(discounted_QALYs_treatment)
 
 # Imprimir resultados
-cat("Costos totales descontados: $", round(total_cost, 2), "\n")
-cat("QALYs totales descontados: ", round(total_QALY, 2), "\n")
+cat("Brazo sin tratamiento:\n")
+cat("Costos totales descontados: $", round(total_cost_no_treatment, 2), "\n")
+cat("QALYs totales descontados: ", round(total_QALY_no_treatment, 2), "\n\n")
 
-# Visualización de la progresión de la cohorte
-state_counts_df <- as.data.frame(state_counts)
-colnames(state_counts_df) <- states
-state_counts_df$Cycle <- 0:horizon
-state_counts_long <- state_counts_df %>%
-  tidyr::pivot_longer(cols = -Cycle, names_to = "State", values_to = "Count")
+cat("Brazo con tratamiento (Benznidazol):\n")
+cat("Costos totales descontados: $", round(total_cost_treatment, 2), "\n")
+cat("QALYs totales descontados: ", round(total_QALY_treatment, 2), "\n")
+```
+
+```{r}
+# Visualización de la progresión de la cohorte en ambos brazos
+state_counts_df_no_treatment <- as.data.frame(state_counts_no_treatment)
+state_counts_df_treatment <- as.data.frame(state_counts_treatment)
+colnames(state_counts_df_no_treatment) <- states
+colnames(state_counts_df_treatment) <- states
+state_counts_df_no_treatment$Cycle <- 0:horizon
+state_counts_df_treatment$Cycle <- 0:horizon
+
+state_counts_long_no_treatment <- state_counts_df_no_treatment %>%
+  tidyr::pivot_longer(cols = -Cycle, names_to = "State", values_to = "Count") %>%
+  mutate(Arm = "No Treatment")
+
+state_counts_long_treatment <- state_counts_df_treatment %>%
+  tidyr::pivot_longer(cols = -Cycle, names_to = "State", values_to = "Count") %>%
+  mutate(Arm = "Treatment")
+
+state_counts_long <- bind_rows(state_counts_long_no_treatment, state_counts_long_treatment)
 
 ggplot(state_counts_long, aes(x = Cycle, y = Count, fill = State)) +
   geom_area(alpha = 0.6) +
+  facet_wrap(~Arm) +
   labs(
-    title = "Progresión de la cohorte en el modelo de Markov",
+    title = "Progresión de la cohorte en el modelo de Markov (con y sin tratamiento)",
     x = "Ciclo (años)",
     y = "Número de individuos",
     fill = "Estado"
   ) +
   theme_minimal()
+```
+```{r}
+# Cálculo de los ICER
+incremental_cost <- total_cost_treatment - total_cost_no_treatment
+incremental_QALY <- total_QALY_treatment - total_QALY_no_treatment
+
+if (incremental_QALY > 0) {
+  ICER <- incremental_cost / incremental_QALY
+  cat("ICER: $", round(ICER, 2), " por QALY ganado\n")
+} else {
+  cat("No se puede calcular el ICER porque el tratamiento no genera más QALYs.\n")
+}
+
+# Resumen de resultados
+cat("\nResumen de resultados:\n")
+cat("Costos totales (sin tratamiento): $", round(total_cost_no_treatment, 2), "\n")
+cat("QALYs totales (sin tratamiento): ", round(total_QALY_no_treatment, 2), "\n")
+cat("Costos totales (con tratamiento): $", round(total_cost_treatment, 2), "\n")
+cat("QALYs totales (con tratamiento): ", round(total_QALY_treatment, 2), "\n")
+cat("Incremento en costos: $", round(incremental_cost, 2), "\n")
+cat("Incremento en QALYs: ", round(incremental_QALY, 2), "\n")
+```
+
+```{r}
+# Rango de parámetros a evaluar
+sensitivity_params <- list(
+  treatment_cost = seq(200, 400, by = 50),                       # Costo del tratamiento
+  effectiveness = seq(0.85, 0.95, by = 0.02),                   # Efectividad del tratamiento
+  discount_rate = seq(0, 0.05, by = 0.01),                      # Tasa de descuento
+  cardiac_cost = seq(1500, 2500, by = 250),                     # Costo de Cardiac
+  digestive_cost = seq(1000, 2000, by = 250),                   # Costo de Digestive
+  chronic_asymptomatic_utility = seq(0.85, 0.95, by = 0.02)     # Utilidad de Chronic_Asymptomatic
+)
+
+# Función para ejecutar el modelo y calcular el ICER dado un parámetro ajustado
+calculate_ICER <- function(param_name, param_value) {
+  # Ajustar parámetros según el análisis de sensibilidad
+  if (param_name == "treatment_cost") {
+    treatment_cost <- param_value
+  } else if (param_name == "effectiveness") {
+    transition_matrix_treatment <- matrix(
+      c(param_value, 0.05, 0.02, 0.01,  # De Chronic_Asymptomatic
+        0.00, param_value, 0.07, 0.03,  # De Cardiac
+        0.00, 0.00, param_value, 0.10,  # De Digestive
+        0.00, 0.00, 0.00, 1.00),       # De Death
+      byrow = TRUE,
+      nrow = length(states),
+      dimnames = list(states, states)
+    )
+  } else if (param_name == "discount_rate") {
+    discount_rate <- param_value
+  } else if (param_name == "cardiac_cost") {
+    costs["Cardiac"] <- param_value
+  } else if (param_name == "digestive_cost") {
+    costs["Digestive"] <- param_value
+  } else if (param_name == "chronic_asymptomatic_utility") {
+    utilities["Chronic_Asymptomatic"] <- param_value
+  }
+  
+  # Recalcular costos y QALYs en el brazo de tratamiento
+  state_counts_treatment <- matrix(0, nrow = horizon + 1, ncol = length(states))
+  state_counts_treatment[1, ] <- initial_cohort
+  total_costs_treatment <- numeric(horizon)
+  total_QALYs_treatment <- numeric(horizon)
+  
+  for (cycle in 1:horizon) {
+    state_counts_treatment[cycle + 1, ] <- state_counts_treatment[cycle, ] %*% transition_matrix_treatment
+    total_costs_treatment[cycle] <- sum(state_counts_treatment[cycle, ] * costs)
+    total_QALYs_treatment[cycle] <- sum(state_counts_treatment[cycle, ] * utilities)
+  }
+  
+  total_costs_treatment[1] <- total_costs_treatment[1] + sum(initial_cohort) * treatment_cost
+  discounted_costs_treatment <- total_costs_treatment * (1 / (1 + discount_rate))^(0:(horizon - 1))
+  discounted_QALYs_treatment <- total_QALYs_treatment * (1 / (1 + discount_rate))^(0:(horizon - 1))
+  
+  total_cost_treatment <- sum(discounted_costs_treatment)
+  total_QALY_treatment <- sum(discounted_QALYs_treatment)
+  
+  # Cálculo del ICER
+  incremental_cost <- total_cost_treatment - total_cost_no_treatment
+  incremental_QALY <- total_QALY_treatment - total_QALY_no_treatment
+  ICER <- ifelse(incremental_QALY > 0, incremental_cost / incremental_QALY, NA)
+  
+  return(ICER)
+}
+
+# Evaluar ICER para cada parámetro y valor en el rango definido
+sensitivity_results <- list()
+
+for (param_name in names(sensitivity_params)) {
+  param_values <- sensitivity_params[[param_name]]
+  ICERs <- sapply(param_values, function(param_value) calculate_ICER(param_name, param_value))
+  sensitivity_results[[param_name]] <- data.frame(Parameter = param_name, Value = param_values, ICER = ICERs)
+}
+
+# Combinar resultados en un solo data frame
+sensitivity_results_df <- do.call(rbind, sensitivity_results)
+
+# Visualización del análisis de sensibilidad
+ggplot(sensitivity_results_df, aes(x = Value, y = ICER, color = Parameter)) +
+  geom_line(size = 1) +
+  facet_wrap(~ Parameter, scales = "free_x") +
+  labs(
+    title = "Análisis de sensibilidad univariado del ICER",
+    x = "Valor del parámetro",
+    y = "ICER ($/QALY ganado)",
+    color = "Parámetro"
+  ) +
+  theme_minimal()
+
+``` 
+```{r}
+# Calcular los valores mínimos y máximos del ICER para cada parámetro
+tornado_data <- sensitivity_results_df %>%
+  group_by(Parameter) %>%
+  summarise(
+    Min_ICER = min(ICER, na.rm = TRUE),
+    Max_ICER = max(ICER, na.rm = TRUE)
+  ) %>%
+  mutate(
+    Range = Max_ICER - Min_ICER,
+    Parameter = reorder(Parameter, Range)  # Ordenar los parámetros por rango
+  )
+
+# Tornado plot using geom_segment
+ggplot(tornado_data, aes(y = Parameter)) +
+  geom_segment(aes(x = Min_ICER, xend = Max_ICER, y = Parameter, yend = Parameter), 
+               size = 5, color = "skyblue") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "red") +
+  labs(
+    title = "Tornado Plot del Análisis de Sensibilidad Univariado",
+    x = "ICER ($/QALY ganado)",
+    y = "Parámetro"
+  ) +
+  theme_minimal() +
+  theme(panel.grid.major.y = element_blank(), # Remove horizontal grid lines
+        axis.title.y = element_text(size = 12),
+        axis.title.x = element_text(size = 12))
+
+```
+
+```{r}
+# Definir los estados de salud
+states <- c("Chronic_Asymptomatic", "Cardiac", "Digestive", "Death")
+
+# Inicializar cohort inicial
+initial_cohort <- c(1, 0, 0, 0)  # Suponiendo que todos comienzan en "Chronic_Asymptomatic"
+
+# Simulaciones de parámetros (asegurarse de que todos tengan las mismas longitudes)
+n_simulations <- 1000
+
+# Definir las distribuciones para los parámetros (costos, efectividad, etc.)
+set.seed(123)
+
+# Definir distribuciones para los parámetros
+cost_treatment_mean <- 300
+cost_treatment_sd <- 50
+cost_cardio_mean <- 2000
+cost_cardio_sd <- 500
+cost_digestive_mean <- 1500
+cost_digestive_sd <- 300
+effectiveness_mean <- 0.9
+effectiveness_sd <- 0.03
+
+# Simulaciones de parámetros
+cost_treatment <- rnorm(n_simulations, mean = cost_treatment_mean, sd = cost_treatment_sd)
+cost_cardio <- rnorm(n_simulations, mean = cost_cardio_mean, sd = cost_cardio_sd)
+cost_digestive <- rnorm(n_simulations, mean = cost_digestive_mean, sd = cost_digestive_sd)
+effectiveness <- rnorm(n_simulations, mean = effectiveness_mean, sd = effectiveness_sd)
+effectiveness <- pmin(pmax(effectiveness, 0.85), 0.95)  # Asegurarse de que esté dentro de los límites [0.85, 0.95]
+
+# Simulaciones de tasa de descuento
+discount_rate <- runif(n_simulations, min = 0, max = 0.05)
+
+# Simulaciones de utilidades
+utility_chronic_asymptomatic <- rnorm(n_simulations, mean = 0.90, sd = 0.05)
+utility_cardio <- rnorm(n_simulations, mean = 0.70, sd = 0.05)
+utility_digestive <- rnorm(n_simulations, mean = 0.60, sd = 0.05)
+
+# Matriz de transición
+transition_matrix_treatment <- matrix(
+  c(effectiveness, 0.05, 0.02, 0.01,  # De Chronic_Asymptomatic
+    0.00, effectiveness, 0.07, 0.03,  # De Cardiac
+    0.00, 0.00, effectiveness, 0.10,  # De Digestive
+    0.00, 0.00, 0.00, 1.00),         # De Death
+  byrow = TRUE,
+  nrow = length(states),
+  dimnames = list(states, states)
+)
+
+# Inicializar vectores para los resultados del ICER
+ICER_results <- numeric(n_simulations)
+
+# Ejecutar las simulaciones
+for (i in 1:n_simulations) {
+  # Asignar los valores de parámetros para cada simulación
+  treatment_cost <- cost_treatment[i]
+  cardio_cost <- cost_cardio[i]
+  digestive_cost <- cost_digestive[i]
+  effectiveness_rate <- effectiveness[i]
+  discount <- discount_rate[i]
+  
+  # Asignar costos y utilidades
+  costs <- c(Chronic_Asymptomatic = treatment_cost, 
+             Cardiac = cardio_cost,
+             Digestive = digestive_cost)
+  
+  utilities <- c(Chronic_Asymptomatic = utility_chronic_asymptomatic[i], 
+                 Cardiac = utility_cardio[i], 
+                 Digestive = utility_digestive[i])
+  
+  # Inicializar la matriz de estados
+  state_counts_treatment <- matrix(0, nrow = horizon + 1, ncol = length(states))
+  state_counts_treatment[1, ] <- initial_cohort
+  
+  # Inicializar los vectores de costos y QALYs
+  total_costs_treatment <- numeric(horizon)
+  total_QALYs_treatment <- numeric(horizon)
+  
+  # Ejecutar la simulación por cada ciclo
+  for (cycle in 1:horizon) {
+    # Multiplicar el vector de estado por la matriz de transición
+    state_counts_treatment[cycle + 1, ] <- state_counts_treatment[cycle, ] %*% transition_matrix_treatment
+    
+    # Calcular el costo total y los QALYs en cada ciclo
+    total_costs_treatment[cycle] <- sum(state_counts_treatment[cycle, ] * costs)
+    total_QALYs_treatment[cycle] <- sum(state_counts_treatment[cycle, ] * utilities)
+  }
+  
+  # Descuento de costos y QALYs
+  discounted_costs_treatment <- total_costs_treatment * (1 / (1 + discount))^(0:(horizon - 1))
+  discounted_QALYs_treatment <- total_QALYs_treatment * (1 / (1 + discount))^(0:(horizon - 1))
+  
+  # Calcular el costo total y QALY total
+  total_cost_treatment <- sum(discounted_costs_treatment)
+  total_QALY_treatment <- sum(discounted_QALYs_treatment)
+  
+  # Calcular el ICER para esta simulación
+  incremental_cost <- total_cost_treatment - total_cost_no_treatment
+  incremental_QALY <- total_QALY_treatment - total_QALY_no_treatment
+  ICER_results[i] <- ifelse(incremental_QALY > 0, incremental_cost / incremental_QALY, NA)
+}
+
+# Visualizar los resultados del ICER
+summary(ICER_results)
+
+# Histograma de ICER
+ggplot(data.frame(ICER = ICER_results), aes(x = ICER)) +
+  geom_histogram(binwidth = 1000, fill = "skyblue", color = "black", alpha = 0.7) +
+  labs(title = "Distribución del ICER en el Análisis de Sensibilidad Probabilística",
+       x = "ICER ($/QALY ganado)", y = "Frecuencia") +
+  theme_minimal()
+
 ```
