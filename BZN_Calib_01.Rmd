@@ -377,6 +377,7 @@ reps_SMSE
 ```{r}
 variab_df<-tibble(P_card_v, CaMorR_v, DiMorR_v, P_dig_v)
 variab_df
+saveRDS(variab_df, "variab_df.RDS")
 ```
 
 
