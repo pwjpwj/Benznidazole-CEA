@@ -41,7 +41,9 @@ P_dig_t<-variab_df[x, "P_dig_v"]*0.88
 P_mort_m<-c(0.00015, 0.00037, 0.00044, 0.00054, 0.00077, 0.00095, 0.00161, 0.00289, 0.00543, 0.00893, 0.01401)
 P_mort_W<-c(0.00014, 0.00016, 0.00015, 0.00023, 0.00037, 0.00062, 0.00096, 0.00158, 0.00273, 0.00429, 0.00648)
 
-population_over_time<-Simulate(P_card=variab_df[x, "P_card_v"], CaMorR=variab_df[x, "CaMorR_v"], DiMorR=variab_df[x, "DiMorR_v"], P_dig=variab_df[x, "P_dig_v"], RR_T_car=0.49, RR_T_dig=0.88, horizon=20, transition_matrices)
+population_over_time<-Simulate(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=P_dig, horizon=20)
+
+population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=P_dig, RR_T_car=0.49, RR_T_dig=0.88, horizon=20)
 
 ```
 ## Ploting evolution over time of non treatment arm
@@ -49,7 +51,7 @@ population_over_time<-Simulate(P_card=variab_df[x, "P_card_v"], CaMorR=variab_df
 
 # Convert list to a long-format data frame
 df <- data.frame()
-
+horizon=20
 for (t in 1:horizon) {
   for (sex in grupos_sexo) {
     for (age in grupos_edad) {

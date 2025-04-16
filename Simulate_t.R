@@ -1,7 +1,7 @@
 Simulate_t<-function(P_card, CaMorR, DiMorR, P_dig, RR_T_car, RR_T_dig, horizon){
   
-  P_card_t*RR_T_car
-  P_dig_t*RR_T_dig
+  P_card_t<-P_card*RR_T_car
+  P_dig_t<-P_dig*RR_T_dig
   states <- c("Chronic_Asymptomatic", "Cardiac", "Digestive", "Death")
   grupos_edad<-c("15-19", "20-24", "25-29", "30-34", "35-39", "40-44", "45-49", "50-54", "55-59", "60-64", "65-69")
   grupos_sexo<-c("Hombre", "Mujer")
@@ -190,10 +190,11 @@ Simulate_t<-function(P_card, CaMorR, DiMorR, P_dig, RR_T_car, RR_T_dig, horizon)
     for (sex in grupos_sexo) {
       for (age in grupos_edad) {
         # Get the transition matrix
-        trans_mat <- transition_matrices_treatment[[sex]][[age]]
+        trans_mat <- matrix(as.numeric(trans_mat), nrow = 4, ncol = 4)
         
         # Current population in this (sex, age) group
         current_pop <- unlist(population[[sex]][[age]])
+        current_pop<-matrix(as.numeric(current_pop), nrow = 1)
         
         # Compute next year's population distribution
         new_pop <- as.numeric(current_pop %*% trans_mat)
