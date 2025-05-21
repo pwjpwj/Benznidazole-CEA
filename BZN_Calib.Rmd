@@ -23,6 +23,7 @@ library(tidyr)
 horizon <- 10            # Horizonte temporal (en años)
 cycle_length <- 1        # Longitud de cada ciclo (en años)
 discount_rate <- 0.03    # Tasa de descuento anual
+BestVariab<-as.numeric(as.vector(readRDS("BestVariab_100000.RDS")))
 
 # Estados de salud
 states <- c("Chronic_Asymptomatic", "Cardiac", "Digestive", "Death")
@@ -31,12 +32,12 @@ grupos_sexo<-c("Hombre", "Mujer")
 deaths<-c(4,2,4,5,6,3,0,7,5,9)
 years<-c(2009:2018)
 
-P_card<-P_card_v[which.min(reps_SMSE)]
-CaMorR<-CaMorR_v[which.min(reps_SMSE)]
-DiMorR<-DiMorR_v[which.min(reps_SMSE)] # Cucunubá et al. Parasites&Vectors 2016
-P_card_t<-0.019*0.49
-P_dig<-P_dig_v[which.min(reps_SMSE)]
-P_dig_t<-0.011*0.88
+P_card<-BestVariab[1]
+CaMorR<-BestVariab[2]
+DiMorR<-BestVariab[3] # Cucunubá et al. Parasites&Vectors 2016
+P_card_t<-BestVariab[1]*0.49
+P_dig<-BestVariab[4]
+P_dig_t<-BestVariab[4]*0.88
 
 P_mort_m<-c(0.00015, 0.00037, 0.00044, 0.00054, 0.00077, 0.00095, 0.00161, 0.00289, 0.00543, 0.00893, 0.01401)
 P_mort_W<-c(0.00014, 0.00016, 0.00015, 0.00023, 0.00037, 0.00062, 0.00096, 0.00158, 0.00273, 0.00429, 0.00648)
@@ -46,280 +47,141 @@ transition_matrices <- list(
   "Hombre" = list(
     "15-19" = matrix(c(1-P_card-P_dig-P_mort_m[1], P_card, P_dig, P_mort_m[1],  
                        0.00, 1-P_dig-P_mort_m[1]*CaMorR, P_dig, P_mort_m[1]*CaMorR,  
-                       0.00, 0.00, 1-P_mort_m[1], P_mort_m[1],  
+                       0.00, P_card, 1-P_mort_m[1]*DiMorR, P_mort_m[1]*DiMorR,  
                        0.00, 0.00, 0.00, 1.00),  
                    byrow = TRUE, nrow = 4),
 
     "20-24" = matrix(c(1-P_card-P_dig-P_mort_m[2], P_card, P_dig, P_mort_m[2],  
-                       0.00, 1-P_dig-P_mort_m[2]*CaMorR, P_dig, P_mort_m[1]*CaMorR, 
-                       0.00, 0.00, 1-P_mort_m[2], P_mort_m[2],  
+                       0.00, 1-P_dig-P_mort_m[2]*CaMorR, P_dig, P_mort_m[2]*CaMorR, 
+                       0.00, P_card, 1-P_mort_m[2]*DiMorR, P_mort_m[2]*DiMorR,  
                        0.00, 0.00, 0.00, 1.00),  
                    byrow = TRUE, nrow = 4),
 
     "25-29" = matrix(c(1-P_card-P_dig-P_mort_m[3], P_card, P_dig, P_mort_m[3],  
-                       0.00, 1-P_dig-P_mort_m[3]*CaMorR, P_dig, P_mort_m[1]*CaMorR, 
-                       0.00, 0.00, 1-P_mort_m[3], P_mort_m[3],  
+                       0.00, 1-P_dig-P_mort_m[3]*CaMorR, P_dig, P_mort_m[3]*CaMorR, 
+                       0.00, P_card, 1-P_mort_m[3]*DiMorR, P_mort_m[3]*DiMorR,  
                        0.00, 0.00, 0.00, 1.00),  
                    byrow = TRUE, nrow = 4),
 
     "30-34" = matrix(c(1-P_card-P_dig-P_mort_m[4], P_card, P_dig, P_mort_m[4],  
-                       0.00, 1-P_dig-P_mort_m[4]*CaMorR, P_dig, P_mort_m[1]*CaMorR,  
-                       0.00, 0.00, 1-P_mort_m[4], P_mort_m[4],  
+                       0.00, 1-P_dig-P_mort_m[4]*CaMorR, P_dig, P_mort_m[4]*CaMorR,  
+                       0.00, P_card, 1-P_mort_m[4]*DiMorR, P_mort_m[4]*DiMorR,  
                        0.00, 0.00, 0.00, 1.00),  
                    byrow = TRUE, nrow = 4), 
     
     "35-39" = matrix(c(1-P_card-P_dig-P_mort_m[5], P_card, P_dig, P_mort_m[5],  
-                       0.00, 1-P_dig-P_mort_m[5]*CaMorR, P_dig, P_mort_m[1]*CaMorR, 
-                       0.00, 0.00, 1-P_mort_m[5], P_mort_m[5],  
+                       0.00, 1-P_dig-P_mort_m[5]*CaMorR, P_dig, P_mort_m[5]*CaMorR, 
+                       0.00, P_card, 1-P_mort_m[5]*DiMorR, P_mort_m[5]*DiMorR, 
                        0.00, 0.00, 0.00, 1.00),  
                    byrow = TRUE, nrow = 4),
 
     "40-44" = matrix(c(1-P_card-P_dig-P_mort_m[6], P_card, P_dig, P_mort_m[6],  
-                       0.00, 1-P_dig-P_mort_m[6]*CaMorR, P_dig, P_mort_m[1]*CaMorR,
-                       0.00, 0.00, 1-P_mort_m[6], P_mort_m[6],  
+                       0.00, 1-P_dig-P_mort_m[6]*CaMorR, P_dig, P_mort_m[6]*CaMorR,
+                       0.00, P_card, 1-P_mort_m[6]*DiMorR, P_mort_m[6]*DiMorR,  
                        0.00, 0.00, 0.00, 1.00),  
                     byrow = TRUE, nrow = 4),
 
     "45-49" = matrix(c(1-P_card-P_dig-P_mort_m[7], P_card, P_dig, P_mort_m[7],  
-                       0.00, 1-P_dig-P_mort_m[7]*CaMorR, P_dig, P_mort_m[1]*CaMorR, 
-                       0.00, 0.00, 1-P_mort_m[7], P_mort_m[7],  
+                       0.00, 1-P_dig-P_mort_m[7]*CaMorR, P_dig, P_mort_m[7]*CaMorR, 
+                       0.00, P_card, 1-P_mort_m[7]*DiMorR, P_mort_m[7]*DiMorR,
                        0.00, 0.00, 0.00, 1.00),  
                     byrow = TRUE, nrow = 4),
 
     "50-54" = matrix(c(1-P_card-P_dig-P_mort_m[8], P_card, P_dig, P_mort_m[8],  
-                       0.00, 1-P_dig-P_mort_m[8]*CaMorR, P_dig, P_mort_m[1]*CaMorR,  
-                       0.00, 0.00, 1-P_mort_m[8], P_mort_m[8],  
+                       0.00, 1-P_dig-P_mort_m[8]*CaMorR, P_dig, P_mort_m[8]*CaMorR,  
+                       0.00, P_card, 1-P_mort_m[8]*DiMorR, P_mort_m[8]*DiMorR, 
                        0.00, 0.00, 0.00, 1.00), 
                    byrow = TRUE, nrow = 4),
     
     "55-59" = matrix(c(1-P_card-P_dig-P_mort_m[9], P_card, P_dig, P_mort_m[9],  
-                       0.00, 1-P_dig-P_mort_m[9]*CaMorR, P_dig, P_mort_m[1]*CaMorR,  
-                       0.00, 0.00, 1-P_mort_m[9], P_mort_m[9],  
+                       0.00, 1-P_dig-P_mort_m[9]*CaMorR, P_dig, P_mort_m[9]*CaMorR,  
+                       0.00, P_card, 1-P_mort_m[9]*DiMorR, P_mort_m[9]*DiMorR, 
                        0.00, 0.00, 0.00, 1.00),
                    byrow = TRUE, nrow = 4),
     
     "60-64" = matrix(c(1-P_card-P_dig-P_mort_m[10], P_card, P_dig, P_mort_m[10],  
-                       0.00, 1-P_dig-P_mort_m[10]*CaMorR, P_dig, P_mort_m[1]*CaMorR, 
-                       0.00, 0.00, 1-P_mort_m[10], P_mort_m[10],  
+                       0.00, 1-P_dig-P_mort_m[10]*CaMorR, P_dig, P_mort_m[10]*CaMorR, 
+                       0.00, P_card, 1-P_mort_m[10]*DiMorR, P_mort_m[10]*DiMorR,  
                        0.00, 0.00, 0.00, 1.00), 
                    byrow = TRUE, nrow = 4),
     
     "65-69" = matrix(c(1-P_card-P_dig-P_mort_m[11], P_card, P_dig, P_mort_m[11],  
-                       0.00, 1-P_dig-P_mort_m[11]*CaMorR, P_dig, P_mort_m[1]*CaMorR,  
-                       0.00, 0.00, 1-P_mort_m[11], P_mort_m[11],  
+                       0.00, 1-P_dig-P_mort_m[11]*CaMorR, P_dig, P_mort_m[11]*CaMorR,  
+                       0.00, P_card, 1-P_mort_m[11]*DiMorR, P_mort_m[11]*DiMorR,  
                        0.00, 0.00, 0.00, 1.00),  
                    byrow = TRUE, nrow = 4)
     
   ),
   "Mujer" = list(
-    "15-19" = matrix(c(1-P_card-P_dig-P_mort_W[1], P_card, P_dig, P_mort_W[1],  
-                       0.00, 1-P_dig-P_mort_W[1]*CaMorR, P_dig, P_mort_m[1]*CaMorR, 
-                       0.00, 0.00, 1-P_mort_W[1], P_mort_W[1],  
+        "15-19" = matrix(c(1-P_card-P_dig-P_mort_W[1], P_card, P_dig, P_mort_W[1],  
+                       0.00, 1-P_dig-P_mort_W[1]*CaMorR, P_dig, P_mort_W[1]*CaMorR,  
+                       0.00, P_card, 1-P_mort_W[1]*DiMorR, P_mort_W[1]*DiMorR,  
                        0.00, 0.00, 0.00, 1.00),  
                    byrow = TRUE, nrow = 4),
 
     "20-24" = matrix(c(1-P_card-P_dig-P_mort_W[2], P_card, P_dig, P_mort_W[2],  
-                       0.00, 1-P_dig-P_mort_W[2]*CaMorR, P_dig, P_mort_m[1]*CaMorR, 
-                       0.00, 0.00, 1-P_mort_W[2], P_mort_W[2],  
-                       0.00, 0.00, 0.00, 1.00),  
-                    byrow = TRUE, nrow = 4),
-
-    "25-29" = matrix(c(1-P_card-P_dig-P_mort_W[3], P_card, P_dig, P_mort_W[3],  
-                       0.00, 1-P_dig-P_mort_W[3]*CaMorR, P_dig, P_mort_m[1]*CaMorR, 
-                       0.00, 0.00, 1-P_mort_W[3], P_mort_W[3],  
-                       0.00, 0.00, 0.00, 1.00),  
-                    byrow = TRUE, nrow = 4),
-
-    "30-34" = matrix(c(1-P_card-P_dig-P_mort_W[4], P_card, P_dig, P_mort_W[4],  
-                       0.00, 1-P_dig-P_mort_W[4]*CaMorR, P_dig, P_mort_m[1]*CaMorR,  
-                       0.00, 0.00, 1-P_mort_W[4], P_mort_W[4],  
+                       0.00, 1-P_dig-P_mort_W[2]*CaMorR, P_dig, P_mort_W[2]*CaMorR, 
+                       0.00, P_card, 1-P_mort_W[2]*DiMorR, P_mort_W[2]*DiMorR,  
                        0.00, 0.00, 0.00, 1.00),  
                    byrow = TRUE, nrow = 4),
+
+    "25-29" = matrix(c(1-P_card-P_dig-P_mort_W[3], P_card, P_dig, P_mort_W[3],  
+                       0.00, 1-P_dig-P_mort_W[3]*CaMorR, P_dig, P_mort_W[3]*CaMorR, 
+                       0.00, P_card, 1-P_mort_W[3]*DiMorR, P_mort_W[3]*DiMorR,  
+                       0.00, 0.00, 0.00, 1.00),  
+                   byrow = TRUE, nrow = 4),
+
+    "30-34" = matrix(c(1-P_card-P_dig-P_mort_W[4], P_card, P_dig, P_mort_W[4],  
+                       0.00, 1-P_dig-P_mort_W[4]*CaMorR, P_dig, P_mort_W[4]*CaMorR,  
+                       0.00, P_card, 1-P_mort_W[4]*DiMorR, P_mort_W[4]*DiMorR,  
+                       0.00, 0.00, 0.00, 1.00),  
+                   byrow = TRUE, nrow = 4), 
     
     "35-39" = matrix(c(1-P_card-P_dig-P_mort_W[5], P_card, P_dig, P_mort_W[5],  
-                       0.00, 1-P_dig-P_mort_W[5]*CaMorR, P_dig, P_mort_m[1]*CaMorR,  
-                       0.00, 0.00, 1-P_mort_W[5], P_mort_W[5],  
+                       0.00, 1-P_dig-P_mort_W[5]*CaMorR, P_dig, P_mort_W[5]*CaMorR, 
+                       0.00, P_card, 1-P_mort_W[5]*DiMorR, P_mort_W[5]*DiMorR, 
                        0.00, 0.00, 0.00, 1.00),  
                    byrow = TRUE, nrow = 4),
 
     "40-44" = matrix(c(1-P_card-P_dig-P_mort_W[6], P_card, P_dig, P_mort_W[6],  
-                       0.00, 1-P_dig-P_mort_W[6]*CaMorR, P_dig, P_mort_m[1]*CaMorR,  
-                       0.00, 0.00, 1-P_mort_W[6], P_mort_W[6],  
+                       0.00, 1-P_dig-P_mort_W[6]*CaMorR, P_dig, P_mort_W[6]*CaMorR,
+                       0.00, P_card, 1-P_mort_W[6]*DiMorR, P_mort_W[6]*DiMorR,  
                        0.00, 0.00, 0.00, 1.00),  
                     byrow = TRUE, nrow = 4),
 
     "45-49" = matrix(c(1-P_card-P_dig-P_mort_W[7], P_card, P_dig, P_mort_W[7],  
-                       0.00, 1-P_dig-P_mort_W[7]*CaMorR, P_dig, P_mort_m[1]*CaMorR,  
-                       0.00, 0.00, 1-P_mort_W[7], P_mort_W[7],  
+                       0.00, 1-P_dig-P_mort_W[7]*CaMorR, P_dig, P_mort_W[7]*CaMorR, 
+                       0.00, P_card, 1-P_mort_W[7]*DiMorR, P_mort_W[7]*DiMorR,
                        0.00, 0.00, 0.00, 1.00),  
                     byrow = TRUE, nrow = 4),
 
     "50-54" = matrix(c(1-P_card-P_dig-P_mort_W[8], P_card, P_dig, P_mort_W[8],  
-                       0.00, 1-P_dig-P_mort_W[8]*CaMorR, P_dig, P_mort_m[1]*CaMorR,  
-                       0.00, 0.00, 1-P_mort_W[8], P_mort_W[8],  
+                       0.00, 1-P_dig-P_mort_W[8]*CaMorR, P_dig, P_mort_W[8]*CaMorR,  
+                       0.00, P_card, 1-P_mort_W[8]*DiMorR, P_mort_W[8]*DiMorR, 
                        0.00, 0.00, 0.00, 1.00), 
                    byrow = TRUE, nrow = 4),
     
     "55-59" = matrix(c(1-P_card-P_dig-P_mort_W[9], P_card, P_dig, P_mort_W[9],  
-                       0.00, 1-P_dig-P_mort_W[9]*CaMorR, P_dig, P_mort_m[1]*CaMorR,
-                       0.00, 0.00, 1-P_mort_W[9], P_mort_W[9],
+                       0.00, 1-P_dig-P_mort_W[9]*CaMorR, P_dig, P_mort_W[9]*CaMorR,  
+                       0.00, P_card, 1-P_mort_W[9]*DiMorR, P_mort_W[9]*DiMorR, 
                        0.00, 0.00, 0.00, 1.00),
                    byrow = TRUE, nrow = 4),
     
     "60-64" = matrix(c(1-P_card-P_dig-P_mort_W[10], P_card, P_dig, P_mort_W[10],  
-                       0.00, 1-P_dig-P_mort_W[10]*CaMorR, P_dig, P_mort_m[1]*CaMorR,  
-                       0.00, 0.00, 1-P_mort_W[10], P_mort_W[10], 
-                       0.00, 0.00, 0.00, 1.00),
+                       0.00, 1-P_dig-P_mort_W[10]*CaMorR, P_dig, P_mort_W[10]*CaMorR, 
+                       0.00, P_card, 1-P_mort_W[10]*DiMorR, P_mort_W[10]*DiMorR,  
+                       0.00, 0.00, 0.00, 1.00), 
                    byrow = TRUE, nrow = 4),
     
     "65-69" = matrix(c(1-P_card-P_dig-P_mort_W[11], P_card, P_dig, P_mort_W[11],  
-                       0.00, 1-P_dig-P_mort_W[11]*CaMorR, P_dig, P_mort_m[1]*CaMorR,  
-                       0.00, 0.00, 1-P_mort_W[11], P_mort_W[11], 
-                       0.00, 0.00, 0.00, 1.00),
+                       0.00, 1-P_dig-P_mort_W[11]*CaMorR, P_dig, P_mort_W[11]*CaMorR,  
+                       0.00, P_card, 1-P_mort_W[11]*DiMorR, P_mort_W[11]*DiMorR,  
+                       0.00, 0.00, 0.00, 1.00),  
                    byrow = TRUE, nrow = 4)
   )
 )
 
-# Probabilidades de transición para el brazo CON tratamiento (Benznidazol) 
-transition_matrices_treatment <- list(
-  "Hombre" = list(
-    "15-19" = matrix(c(1-P_card_t-P_dig_t-P_mort_m[1], P_card_t, P_dig_t, P_mort_m[1],  
-                       0.00, 1-P_dig_t-P_mort_m[1]*CaMorR, P_dig, P_mort_m[1]*CaMorR, 
-                       0.00, 0.00, 1-P_mort_m[1], P_mort_m[1],  
-                       0.00, 0.00, 0.00, 1.00),  
-                   byrow = TRUE, nrow = 4),
 
-    "20-24" = matrix(c(1-P_card_t-P_dig_t-P_mort_m[2], P_card_t, P_dig_t, P_mort_m[2],  
-                       0.00, 1-P_dig_t-P_mort_m[2]*CaMorR, P_dig, P_mort_m[1]*CaMorR, 
-                       0.00, 0.00, 1-P_mort_m[2], P_mort_m[2],  
-                       0.00, 0.00, 0.00, 1.00),  
-                   byrow = TRUE, nrow = 4),
-
-    "25-29" = matrix(c(1-P_card_t-P_dig_t-P_mort_m[3], P_card_t, P_dig_t, P_mort_m[3],  
-                       0.00, 1-P_dig_t-P_mort_m[3]*CaMorR, P_dig, P_mort_m[1]*CaMorR,  
-                       0.00, 0.00, 1-P_mort_m[3], P_mort_m[3],  
-                       0.00, 0.00, 0.00, 1.00),  
-                   byrow = TRUE, nrow = 4),
-
-    "30-34" = matrix(c(1-P_card_t-P_dig_t-P_mort_m[4], P_card_t, P_dig_t, P_mort_m[4],  
-                       0.00, 1-P_dig_t-P_mort_m[4]*CaMorR, P_dig, P_mort_m[1]*CaMorR,
-                       0.00, 0.00, 1-P_mort_m[4], P_mort_m[4],  
-                       0.00, 0.00, 0.00, 1.00),  
-                   byrow = TRUE, nrow = 4), 
-    
-    "35-39" = matrix(c(1-P_card_t-P_dig_t-P_mort_m[5], P_card_t, P_dig_t, P_mort_m[5],  
-                       0.00, 1-P_dig_t-P_mort_m[5]*CaMorR, P_dig, P_mort_m[1]*CaMorR,  
-                       0.00, 0.00, 1-P_mort_m[5], P_mort_m[5],  
-                       0.00, 0.00, 0.00, 1.00),  
-                   byrow = TRUE, nrow = 4),
-
-    "40-44" = matrix(c(1-P_card_t-P_dig_t-P_mort_m[6], P_card_t, P_dig_t, P_mort_m[6],  
-                       0.00, 1-P_dig_t-P_mort_m[6]*CaMorR, P_dig, P_mort_m[1]*CaMorR,  
-                       0.00, 0.00, 1-P_mort_m[6], P_mort_m[6],  
-                       0.00, 0.00, 0.00, 1.00),  
-                    byrow = TRUE, nrow = 4),
-
-    "45-49" = matrix(c(1-P_card_t-P_dig_t-P_mort_m[7], P_card_t, P_dig_t, P_mort_m[7],  
-                       0.00, 1-P_dig_t-P_mort_m[7]*CaMorR, P_dig, P_mort_m[1]*CaMorR,
-                       0.00, 0.00, 1-P_mort_m[7], P_mort_m[7],  
-                       0.00, 0.00, 0.00, 1.00),  
-                    byrow = TRUE, nrow = 4),
-
-    "50-54" = matrix(c(1-P_card_t-P_dig_t-P_mort_m[8], P_card_t, P_dig_t, P_mort_m[8],  
-                       0.00, 1-P_dig_t-P_mort_m[8]*CaMorR, P_dig, P_mort_m[1]*CaMorR,  
-                       0.00, 0.00, 1-P_mort_m[8], P_mort_m[8],  
-                       0.00, 0.00, 0.00, 1.00), 
-                   byrow = TRUE, nrow = 4),
-    
-    "55-59" = matrix(c(1-P_card_t-P_dig_t-P_mort_m[9], P_card_t, P_dig_t, P_mort_m[9],  
-                       0.00, 1-P_dig_t-P_mort_m[9]*CaMorR, P_dig, P_mort_m[1]*CaMorR, 
-                       0.00, 0.00, 1-P_mort_m[9], P_mort_m[9],  
-                       0.00, 0.00, 0.00, 1.00),
-                   byrow = TRUE, nrow = 4),
-    
-    "60-64" = matrix(c(1-P_card_t-P_dig_t-P_mort_m[10], P_card_t, P_dig_t, P_mort_m[10],  
-                       0.00, 1-P_dig_t-P_mort_m[10]*CaMorR, P_dig, P_mort_m[1]*CaMorR,  
-                       0.00, 0.00, 1-P_mort_m[10], P_mort_m[10],  
-                       0.00, 0.00, 0.00, 1.00), 
-                   byrow = TRUE, nrow = 4),
-    
-    "65-69" = matrix(c(1-P_card_t-P_dig_t-P_mort_m[11], P_card_t, P_dig_t, P_mort_m[11],  
-                       0.00, 1-P_dig_t-P_mort_m[11]*CaMorR, P_dig, P_mort_m[1]*CaMorR,
-                       0.00, 0.00, 1-P_mort_m[11], P_mort_m[11],  
-                       0.00, 0.00, 0.00, 1.00),  
-                   byrow = TRUE, nrow = 4)
-    
-  ),
-  "Mujer" = list(
-    "15-19" = matrix(c(1-P_card_t-P_dig_t-P_mort_W[1], P_card_t, P_dig_t, P_mort_W[1],  
-                       0.00, 1-P_dig_t-P_mort_W[1]*CaMorR, P_dig, P_mort_m[1]*CaMorR, 
-                       0.00, 0.00, 1-P_mort_W[1], P_mort_W[1],  
-                       0.00, 0.00, 0.00, 1.00),  
-                   byrow = TRUE, nrow = 4),
-
-    "20-24" = matrix(c(1-P_card_t-P_dig_t-P_mort_W[2], P_card_t, P_dig_t, P_mort_W[2],  
-                       0.00, 1-P_dig_t-P_mort_W[2]*CaMorR, P_dig, P_mort_m[1]*CaMorR,  
-                       0.00, 0.00, 1-P_mort_W[2], P_mort_W[2],  
-                       0.00, 0.00, 0.00, 1.00),  
-                    byrow = TRUE, nrow = 4),
-
-    "25-29" = matrix(c(1-P_card_t-P_dig_t-P_mort_W[3], P_card_t, P_dig_t, P_mort_W[3],  
-                       0.00, 1-P_dig_t-P_mort_W[3]*CaMorR, P_dig, P_mort_m[1]*CaMorR,
-                       0.00, 0.00, 1-P_mort_W[3], P_mort_W[3],  
-                       0.00, 0.00, 0.00, 1.00),  
-                    byrow = TRUE, nrow = 4),
-
-    "30-34" = matrix(c(1-P_card_t-P_dig_t-P_mort_W[4], P_card_t, P_dig_t, P_mort_W[4],  
-                       0.00, 1-P_dig_t-P_mort_W[4]*CaMorR, P_dig, P_mort_m[1]*CaMorR,
-                       0.00, 0.00, 1-P_mort_W[4], P_mort_W[4],  
-                       0.00, 0.00, 0.00, 1.00),  
-                   byrow = TRUE, nrow = 4),
-    
-    "35-39" = matrix(c(1-P_card_t-P_dig_t-P_mort_W[5], P_card_t, P_dig_t, P_mort_W[5],  
-                       0.00, 1-P_dig_t-P_mort_W[5]*CaMorR, P_dig, P_mort_m[1]*CaMorR, 
-                       0.00, 0.00, 1-P_mort_W[5], P_mort_W[5],  
-                       0.00, 0.00, 0.00, 1.00),  
-                   byrow = TRUE, nrow = 4),
-
-    "40-44" = matrix(c(1-P_card_t-P_dig_t-P_mort_W[6], P_card_t, P_dig_t, P_mort_W[6],  
-                       0.00, 1-P_dig_t-P_mort_W[6]*CaMorR, P_dig, P_mort_m[1]*CaMorR, 
-                       0.00, 0.00, 1-P_mort_W[6], P_mort_W[6],  
-                       0.00, 0.00, 0.00, 1.00),  
-                    byrow = TRUE, nrow = 4),
-
-    "45-49" = matrix(c(1-P_card_t-P_dig_t-P_mort_W[7], P_card_t, P_dig_t, P_mort_W[7],  
-                       0.00, 1-P_dig_t-P_mort_W[7]*CaMorR, P_dig, P_mort_m[1]*CaMorR, 
-                       0.00, 0.00, 1-P_mort_W[7], P_mort_W[7],  
-                       0.00, 0.00, 0.00, 1.00),  
-                    byrow = TRUE, nrow = 4),
-
-    "50-54" = matrix(c(1-P_card_t-P_dig_t-P_mort_W[8], P_card_t, P_dig_t, P_mort_W[8],  
-                       0.00, 1-P_dig_t-P_mort_W[8]*CaMorR, P_dig, P_mort_m[1]*CaMorR,
-                       0.00, 0.00, 1-P_mort_W[8], P_mort_W[8],  
-                       0.00, 0.00, 0.00, 1.00), 
-                   byrow = TRUE, nrow = 4),
-    
-    "55-59" = matrix(c(1-P_card_t-P_dig_t-P_mort_W[9], P_card_t, P_dig_t, P_mort_W[9],  
-                       0.00, 1-P_dig_t-P_mort_W[9]*CaMorR, P_dig, P_mort_m[1]*CaMorR,  
-                       0.00, 0.00, 1-P_mort_W[9], P_mort_W[9],
-                       0.00, 0.00, 0.00, 1.00),
-                   byrow = TRUE, nrow = 4),
-    
-    "60-64" = matrix(c(1-P_card_t-P_dig_t-P_mort_W[10], P_card_t, P_dig_t, P_mort_W[10],  
-                       0.00, 1-P_dig_t-P_mort_W[10]*CaMorR, P_dig, P_mort_m[1]*CaMorR,  
-                       0.00, 0.00, 1-P_mort_W[10], P_mort_W[10], 
-                       0.00, 0.00, 0.00, 1.00),
-                   byrow = TRUE, nrow = 4),
-    
-    "65-69" = matrix(c(1-P_card_t-P_dig_t-P_mort_W[11], P_card_t, P_dig_t, P_mort_W[11],  
-                       0.00, 1-P_dig_t-P_mort_W[11]*CaMorR, P_dig, P_mort_m[1]*CaMorR,  
-                       0.00, 0.00, 1-P_mort_W[11], P_mort_W[11], 
-                       0.00, 0.00, 0.00, 1.00),
-                   byrow = TRUE, nrow = 4)
-  )
-)
-```
-```{r}
 # Initial population distribution (Distribución según INE (personas de sudamérica), casos según Navarro et al 2022)
 population <- list()
 Chr_Asym_H<-c(1624, 2767, 3867, 4136, 3554, 3166, 2292, 1496, 933, 552, 307)
@@ -340,10 +202,7 @@ names(Chr_Asym_M)<-grupos_edad
                                    Death = 0)
   }
 
-```
 
-# Simulating the non treatment arm
-```{r}
 # Simulation loop
 
 # Initialize storage for population evolution
@@ -352,7 +211,6 @@ deaths_chagas_over_time <- list()
 
 prop_moving <- 0.2  # 20% of the population moves each year as the year groups are of 5 years
 for (t in 1:horizon) {
-  cat("Year:", t, "\n")
   
   new_population <- list()
   deaths_chagas <- list()
@@ -367,30 +225,40 @@ for (t in 1:horizon) {
     }
   }
   
+  total_deaths <- 0  # To accumulate deaths during this cycle
+  
   for (sex in grupos_sexo) {
     for (age in grupos_edad) {
       # Get the transition matrix
-      trans_mat <- transition_matrices[[sex]][[age]]
+        trans_mat <- matrix(as.numeric(transition_matrices[[sex]][[age]]), nrow = 4, ncol = 4)
       
-      # Current population in this (sex, age) group
-      current_pop <- unlist(population[[sex]][[age]])
+        # Current population in this (sex, age) group
+        current_pop <- unlist(population[[sex]][[age]])
+        current_pop<-matrix(as.numeric(current_pop), nrow = 1)
+        # Compute next year's population distribution
+        
+       # Split population into those who stay and those who move to next age group
+      moving_out <- prop_moving * current_pop
+      staying <- (1 - prop_moving) * current_pop
+
+      # Apply transitions separately
+      moved_pop <- as.numeric(moving_out %*% trans_mat)
+      stayed_pop <- as.numeric(staying %*% trans_mat)
       
-      # Compute next year's population distribution
-      new_pop <- as.numeric(current_pop %*% trans_mat)
-      
-      # Extract deaths (assuming "Death" is a known index in states)
+      # Count all deaths
       death_index <- which(states == "Death")
+      deaths_from_group <- sum(moved_pop[death_index]) + sum(stayed_pop[death_index])
+      total_deaths <- total_deaths + deaths_from_group
+
+      # Remove deaths
+      moved_pop[death_index] <- 0
+      stayed_pop[death_index] <- 0
+
+      # Calculate Chagas deaths
       cardiac_chagas_index <- which(states == "Cardiac")
-
-      # Total deaths from the "Cardiac Chagas Disease" state
       deaths_from_cardiac_chagas <- current_pop[cardiac_chagas_index] * trans_mat[cardiac_chagas_index, death_index]
+      deaths_chagas[[sex]][[age]] <- (1 - (1 / CaMorR)) * deaths_from_cardiac_chagas
 
-      # Assume x% of these deaths are due to Chagas cardiac disease
-      deaths_chagas[[sex]][[age]] <- (1-(1/CaMorR)) * deaths_from_cardiac_chagas
-
-      # Remove deaths from the population update
-      #new_pop[death_index] <- 0
-      
       # Move individuals to the next age group if possible
       next_age_group <- switch(age,
                                "15-19" = "20-24",
@@ -403,28 +271,30 @@ for (t in 1:horizon) {
                                "50-54" = "55-59",
                                "55-59" = "60-64",
                                "60-64" = "65-69",
-                               "65-69" = "65-69",
+                               "65-69" = "15-99",
                                age  # If the age group is not in the switch statement, keep it
       )
 
-      # Store updated population
+     # Store updated population
       if (next_age_group != age) {
-        if (is.null(new_population[[sex]][[next_age_group]])) {
-          new_population[[sex]][[next_age_group]] <- new_pop
-        } else {
-          new_population[[sex]][[next_age_group]] <- new_population[[sex]][[next_age_group]] + prop_moving *new_pop
-          new_population[[sex]][[age]] <- (1 - prop_moving) * new_pop
-        }
-      } else {
-        new_population[[sex]][[age]] <- new_pop
+        new_population[[sex]][[next_age_group]] <- new_population[[sex]][[next_age_group]] + moved_pop
       }
+
+      new_population[[sex]][[age]] <- new_population[[sex]][[age]] + stayed_pop
     }
   }
   
+  # Inject newborns into 15–19 group, Chronic_Asymptomatic state
+  start_state_index <- which(states == "Chronic_Asymptomatic")
+  for (sex in grupos_sexo) {
+    new_population[[sex]][["15-19"]][start_state_index] <-
+      new_population[[sex]][["15-19"]][start_state_index] + total_deaths / length(grupos_sexo)
+  }
+
   # Save population state at this time step
-  population_over_time[[t]] <- population
+  population_over_time[[t]] <- new_population
   deaths_chagas_over_time[[t]] <- deaths_chagas
-  
+
   # Update population for the next cycle
   population <- new_population
 }
@@ -452,6 +322,33 @@ for (t in 1:horizon) {
     }
   }
 }
+
+# Convert data to long format for ggplot
+df_long <- df %>%
+  pivot_longer(cols = c("Chronic_Asymptomatic", "Cardiac", "Digestive", "Death"),
+               names_to = "State",
+               values_to = "Count")
+
+# Ensure ordered age groups (optional)
+df_long$Age_Group <- factor(df_long$Age_Group, levels = grupos_edad)
+
+ggplot(df_long, aes(x=Year, y = Count, fill = State)) +
+  geom_col(alpha = 0.6, position="stack") +  # Stacked area plot
+  #geom_smooth(aes(group = State), method = "loess", color = "black", size = 0.5, se = FALSE) +
+  facet_wrap(~Sex+Age_Group, scales = "free_y") +  # Facet by Sex and Age Group
+  labs(
+    title = "Evolution of Health States Over Time",
+    x = "Year",
+    y = "Number of Individuals",
+    fill = "Health State"
+  ) +
+  theme_minimal()
+
+```
+
+
+## Ploting deaths over time
+```{r}
 
 deaths_chagas_df <- do.call(rbind, lapply(seq_along(deaths_chagas_over_time), function(t) {
   data <- deaths_chagas_over_time[[t]]
@@ -487,8 +384,8 @@ df_cal<-df_long%>%
 ggplot(deaths_chagas_disease2, aes(x = year, y = count)) +
   geom_point(color="red") + 
   geom_point(aes(y=deaths), color="blue")+
-  geom_smooth(aes(y = count, color = "Count"), method = "lm", se = FALSE) +
-  geom_smooth(aes(y = deaths, color = "Deaths"), method = "lm", se = FALSE) +
+  geom_smooth(aes(y = count, color = "Model"), method = "lm", se = FALSE) +
+  geom_smooth(aes(y = deaths, colour = "Deaths"), method = "lm", se = FALSE) +
   labs(
     title = "Evolution of Deaths Over Time",
     x = "Year",

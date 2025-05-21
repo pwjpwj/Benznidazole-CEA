@@ -1,5 +1,5 @@
 ---
-title: "BZN CEA"
+title: "BZN OWA"
 author: "Philip Wikman"
 date: "2025-01-07"
 output: html_document
@@ -15,11 +15,11 @@ library(dplyr)
 library(ggplot2)
 library(MASS)
 library(tidyr)
+library(ggplot2)
 source("calculate_qalys_costs.R")
 source("Simulate.R")
 source("Simulate_t.R")
-variab_df<-readRDS("variab_df.RDS")
-reps_SMSE<-readRDS("reps_SMSE.rds")
+source("QalyCost.R")
 ```
 
 
@@ -27,254 +27,333 @@ reps_SMSE<-readRDS("reps_SMSE.rds")
 # Definir parámetros del modelo
 cycle_length <- 1        # Longitud de cada ciclo (en años)
 discount_rate <- 0.03    # Tasa de descuento anual
-
+BestVariab<-as.numeric(as.vector(readRDS("BestVariab_100000.RDS")))
+grupos_sexo<-c("Hombre", "Mujer")
+states <- c("Chronic_Asymptomatic", "Cardiac", "Digestive", "Death")
+grupos_edad<-c("15-19", "20-24", "25-29", "30-34", "35-39", "40-44", "45-49", "50-54", "55-59", "60-64", "65-69")
 # Estados de salud
-x<-which.min(reps_SMSE)
 
-P_card<-variab_df[x, "P_card_v"]
-CaMorR<-variab_df[x, "CaMorR_v"]
-DiMorR<-variab_df[x, "DiMorR_v"] # Cucunubá et al. Parasites&Vectors 2016
-P_card_t<-variab_df[x, "P_card_v"]*0.49
-P_dig<-variab_df[x, "P_dig_v"]
-P_dig_t<-variab_df[x, "P_dig_v"]*0.88
+P_card<-BestVariab[1]
+CaMorR<-BestVariab[2]
+DiMorR<-BestVariab[3] # Cucunubá et al. Parasites&Vectors 2016
+P_card_t<-BestVariab[1]*0.49
+P_dig<-BestVariab[4]
+P_dig_t<-BestVariab[4]*0.88
 
 P_mort_m<-c(0.00015, 0.00037, 0.00044, 0.00054, 0.00077, 0.00095, 0.00161, 0.00289, 0.00543, 0.00893, 0.01401)
 P_mort_W<-c(0.00014, 0.00016, 0.00015, 0.00023, 0.00037, 0.00062, 0.00096, 0.00158, 0.00273, 0.00429, 0.00648)
 
-population_over_time<-Simulate(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=P_dig, horizon=20)
-
-population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=P_dig, RR_T_car=0.49, RR_T_dig=0.88, horizon=20)
-
-```
-## Ploting evolution over time of non treatment arm
-```{r}
-
-# Convert list to a long-format data frame
-df <- data.frame()
-horizon=20
-for (t in 1:horizon) {
-  for (sex in grupos_sexo) {
-    for (age in grupos_edad) {
-      state_values <- population_over_time[[t]][[sex]][[age]]
-      df <- rbind(df, data.frame(
-        Year = t,
-        Sex = sex,
-        Age_Group = age,
-        Chronic_Asymptomatic = state_values[1],
-        Cardiac = state_values[2],
-        Digestive = state_values[3],
-        Death = state_values[4]
-      ))
-    }
-  }
-}
-
-# Convert data to long format for ggplot
-df_long <- df %>%
-  pivot_longer(cols = c("Chronic_Asymptomatic", "Cardiac", "Digestive", "Death"),
-               names_to = "State",
-               values_to = "Count")
-
-# Ensure ordered age groups (optional)
-df_long$Age_Group <- factor(df_long$Age_Group, levels = grupos_edad)
-
-ggplot(df_long, aes(x = Year, y = Count, fill = State)) +
-  geom_area(alpha = 0.6) +  # Stacked area plot
-  #geom_smooth(aes(group = State), method = "loess", color = "black", size = 0.5, se = FALSE) +
-  facet_wrap(~Sex+Age_Group, scales = "free_y") +  # Facet by Sex and Age Group
-  labs(
-    title = "Evolution of Health States Over Time",
-    x = "Year",
-    y = "Number of Individuals",
-    fill = "Health State"
-  ) +
-  theme_minimal()
-
-```
-
-
-# Simulating the treatment arm
-
-
-```{r}
-
-Simulate_t(P_card=P_card_v[which.min(reps_SMSE)],CaMorR=CaMorR_v[which.min(reps_SMSE)], DiMorR=DiMorR_v[which.min(reps_SMSE)],P_dig=P_dig_v[which.min(reps_SMSE)], RR_T_car=0.49, RR_T_dig=0.88, horizon=20)
-# Simulation loop
-
-# Initialize storage for population evolution
-population_over_time_t <- list()
-prop_moving <- 0.2  # 20% of the population moves each year as the year groups are of 5 years
-for (t in 1:horizon) {
-  cat("Year:", t, "\n")
-  
-  new_population_t <- list()
-  
-  for (sex in grupos_sexo) {
-    new_population_t[[sex]] <- list()
-    for (age in grupos_edad) {
-      new_population_t[[sex]][[age]] <- rep(0, length(states))  # Initialize empty state vector
-    }
-  }
-  
-  for (sex in grupos_sexo) {
-    for (age in grupos_edad) {
-      # Get the transition matrix
-      trans_mat <- transition_matrices_treatment[[sex]][[age]]
-      
-      # Current population in this (sex, age) group
-      current_pop <- unlist(population_t[[sex]][[age]])
-      
-      # Compute next year's population distribution
-      new_pop <- as.numeric(current_pop %*% trans_mat)
-      
-      # Move individuals to the next age group if possible
-      next_age_group <- switch(age,
-                               "15-19" = "20-24",
-                               "20-24" = "25-29",
-                               "25-29" = "30-34",
-                               "30-34" = "35-39",
-                               "35-39" = "40-44",
-                               "40-44" = "45-49",
-                               "45-49" = "50-54",
-                               "50-54" = "55-59",
-                               "55-59" = "60-64",
-                               "60-64" = "65-69",
-                               "65-69" = "65-69",
-                               age  # If the age group is not in the switch statement, keep it
-      )
-
-      # Store updated population
-      if (next_age_group != age) {
-        if (is.null(new_population_t[[sex]][[next_age_group]])) {
-          new_population_t[[sex]][[next_age_group]] <- new_pop
-        } else {
-          new_population_t[[sex]][[next_age_group]] <- new_population_t[[sex]][[next_age_group]] +  
-          prop_moving * new_pop
-          new_population_t[[sex]][[age]] <- (1 - prop_moving) * new_pop
-        }
-      } else {
-        new_population_t[[sex]][[age]] <- new_pop
-      }
-    }
-  }
-  
-  # Save population state at this time step
-  population_over_time_t[[t]] <- population_t
-
-  # Update population for the next cycle
-  population_t <- new_population_t
-}
-
-```
-## Ploting evolution over time of treatment arm
-```{r}
-
-# Convert list to a long-format data frame
-df <- data.frame()
-
-for (t in 1:horizon) {
-  for (sex in grupos_sexo) {
-    for (age in grupos_edad) {
-      state_values <- population_over_time[[t]][[sex]][[age]]
-      df <- rbind(df, data.frame(
-        Year = t,
-        Sex = sex,
-        Age_Group = age,
-        Chronic_Asymptomatic = state_values[1],
-        Cardiac = state_values[2],
-        Digestive = state_values[3],
-        Death = state_values[4]
-      ))
-    }
-  }
-}
-
-# Convert data to long format for ggplot
-df_long <- df %>%
-  pivot_longer(cols = c("Chronic_Asymptomatic", "Cardiac", "Digestive", "Death"),
-               names_to = "State",
-               values_to = "Count")
-
-# Ensure ordered age groups (optional)
-df_long$Age_Group <- factor(df_long$Age_Group, levels = grupos_edad)
-
-ggplot(df_long, aes(x = Year, y = Count, fill = State)) +
-  geom_area(alpha = 0.6) +  # Stacked area plot
-  #geom_smooth(aes(group = State), method = "loess", color = "black", size = 0.5, se = FALSE) +
-  facet_wrap(~Sex+Age_Group, scales = "free_y") +  # Facet by Sex and Age Group
-  labs(
-    title = "Evolution of Health States Over Time",
-    x = "Year",
-    y = "Number of Individuals",
-    fill = "Health State"
-  ) +
-  theme_minimal()
-
-```
-
-
-# Calculate Qalys and costs of non treatment arm
-
-```{r}
 qaly_weights <- c(
   Chronic_Asymptomatic = 0.9625,
   Cardiac = 0.7171,
-  Digestive = 0.60,
+  Digestive = 0.80,
   Death = 0
 )
 
 costs <- c(
-  Chronic_Asymptomatic = 500,
-  Cardiac = 10000,
-  Digestive = 5000,
+  Chronic_Asymptomatic = 478,
+  Cardiac = 11976.53,
+  Digestive = 858.82,
   Death = 0
 )
-
 discount_rate <- 0.03  # 3% discount rate
 
-
-# Compute QALYs and costs
-qalys_costs_results <- calculate_qalys_costs(population_over_time, qaly_weights, costs, discount_rate)
-
-# Print results
-No_treat<-colSums(qalys_costs_results[,2:3])
-No_treat
-```
-# Calculate QALYs and costs of treatment arm
-```{r}
-# Compute QALYs and costs
-qalys_costs_results_t <- calculate_qalys_costs(population_over_time_t, qaly_weights, costs, discount_rate)
-
-# Print results
-treat<-colSums(qalys_costs_results_t[,2:3])
-treat
+OWSADAT<-data.frame(matrix(NA, nrow=6, ncol=3))
+colnames(OWSADAT)<-c("Parameter", "ICER_high", "ICER_low")
 ```
 
+# 1. Probability of developing Chagas sympthomatic cardiomyopathy (P_card)
+
+## High value
+### Simulating non-treatment arm
 ```{r}
-Det_CEA<-bind_rows(No_treat, treat)%>%mutate(Intervention=c("No treatment", "Benznidazole")) 
-Det_CEA$Intervention<-as.factor(Det_CEA$Intervention)                                            
-ACost=Det_CEA$Costs[2]-Det_CEA$Costs[1]
-AQALYs=Det_CEA$QALYs[2]-Det_CEA$QALYs[1]
-ICER=ACost/AQALYs
-ACost
-AQALYs
-ICER
-a<-1
-b<-1
-Det_CEA$AQALYs<-c(a, AQALYs)
-Det_CEA$ACosts<-c(b, ACost)
+population_over_time<-Simulate(P_card=0.03, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=P_dig, horizon=20)
 ```
 
+### Simulating the treatment arm
 
 ```{r}
-ggplot(Det_CEA, aes(x=AQALYs, y=ACosts, fill=Intervention))+
-  geom_point(size = 4, shape = 21)+
-  ylim(-100000000,100000)+
-  #scale_y_log10()+
-  geom_hline(yintercept =0)+
-  geom_vline(xintercept =0)+
-  xlim(-200,3000)+
-  theme_minimal()+
-  ggtitle("Cost-effectivenes plane of Benznidazole 
-          vs no treatment")
+population_over_time_t<-Simulate_t(P_card=0.03, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=P_dig, RR_T_car=0.49, RR_T_dig=0.88, horizon=20)
+```
+
+# Calculate Qalys and costs 
+
+```{r}
+Det_CEA_H<-QalyCost(population_over_time, population_over_time_t)
+Det_CEA_H
+```
+## low value
+```{r}
+population_over_time<-Simulate(P_card=0.001, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=P_dig, horizon=20)
+```
+
+```{r}
+population_over_time_t<-Simulate_t(P_card=0.001, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=P_dig, RR_T_car=0.49, RR_T_dig=0.88, horizon=20)
+```
+ 
+```{r}
+Det_CEA_L<-QalyCost(population_over_time, population_over_time_t)
+Det_CEA_L
+```
+
+```{r}
+OWSADAT[1,]<-c("P_card", Det_CEA_H$ICER[2], Det_CEA_L$ICER[2])
+OWSADAT
+```
+
+# 2. Chagas Cardiac Disease Mortality  (CaMorR)
+```{r}
+P_card<-BestVariab[1]
+CaMorR<-BestVariab[2]
+DiMorR<-BestVariab[3] 
+P_card_t<-BestVariab[1]*0.49
+P_dig<-BestVariab[4]
+P_dig_t<-BestVariab[4]*0.88
+```
+## High value
+### Simulating non-treatment arm
+```{r}
+population_over_time<-Simulate(P_card=P_card, CaMorR=3, DiMorR=DiMorR, P_dig=P_dig, horizon=20)
+```
+
+### Simulating the treatment arm
+
+```{r}
+population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=3, DiMorR=DiMorR, P_dig=P_dig, RR_T_car=0.49, RR_T_dig=0.88, horizon=20)
+```
+
+# Calculate Qalys and costs 
+
+```{r}
+Det_CEA_H<-QalyCost(population_over_time, population_over_time_t)
+Det_CEA_H
+```
+## low value
+```{r}
+population_over_time<-Simulate(P_card=P_card, CaMorR=1.1, DiMorR=DiMorR, P_dig=P_dig, horizon=20)
+```
+
+```{r}
+population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=1.1, DiMorR=DiMorR, P_dig=P_dig, RR_T_car=0.49, RR_T_dig=0.88, horizon=20)
+```
+ 
+```{r}
+Det_CEA_L<-QalyCost(population_over_time, population_over_time_t)
+Det_CEA_L
+```
+
+```{r}
+OWSADAT[2,]<-c("CaMorR", Det_CEA_H$ICER[2], Det_CEA_L$ICER[2])
+OWSADAT
+```
+
+# 3. Chagas Digestive disease Mortality  (DiMorR)
+```{r}
+P_card<-BestVariab[1]
+CaMorR<-BestVariab[2]
+DiMorR<-BestVariab[3] # Cucunubá et al. Parasites&Vectors 2016
+P_card_t<-BestVariab[1]*0.49
+P_dig<-BestVariab[4]
+P_dig_t<-BestVariab[4]*0.88
+```
+## High value
+### Simulating non-treatment arm
+```{r}
+population_over_time<-Simulate(P_card=P_card, CaMorR=CaMorR, DiMorR=2.91, P_dig=P_dig, horizon=20)
+```
+
+### Simulating the treatment arm
+
+```{r}
+population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=CaMorR, DiMorR=2.91, P_dig=P_dig, RR_T_car=0.49, RR_T_dig=0.88, horizon=20)
+```
+
+# Calculate Qalys and costs 
+
+```{r}
+Det_CEA_H<-QalyCost(population_over_time, population_over_time_t)
+Det_CEA_H
+```
+## low value
+```{r}
+population_over_time<-Simulate(P_card=P_card, CaMorR=CaMorR, DiMorR=1.5, P_dig=P_dig, horizon=20)
+```
+
+```{r}
+population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=CaMorR, DiMorR=1.5, P_dig=P_dig, RR_T_car=0.49, RR_T_dig=0.88, horizon=20)
+```
+ 
+```{r}
+Det_CEA_L<-QalyCost(population_over_time, population_over_time_t)
+Det_CEA_L
+```
+
+```{r}
+OWSADAT[3,]<-c("DiMorR", Det_CEA_H$ICER[2], Det_CEA_L$ICER[2])
+OWSADAT
+```
+
+# 4. Probability of developing Chagas Digestive disease (P_dig)
+```{r}
+P_card<-BestVariab[1]
+CaMorR<-BestVariab[2]
+DiMorR<-BestVariab[3] # Cucunubá et al. Parasites&Vectors 2016
+P_card_t<-BestVariab[1]*0.49
+P_dig<-BestVariab[4]
+P_dig_t<-BestVariab[4]*0.88
+```
+## High value
+### Simulating non-treatment arm
+```{r}
+population_over_time<-Simulate(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=0.035, horizon=20)
+```
+
+### Simulating the treatment arm
+
+```{r}
+population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=0.035, RR_T_car=0.49, RR_T_dig=0.88, horizon=20)
+```
+
+# Calculate Qalys and costs 
+
+```{r}
+Det_CEA_H<-QalyCost(population_over_time, population_over_time_t)
+Det_CEA_H
+```
+## low value
+```{r}
+population_over_time<-Simulate(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=0.008, horizon=20)
+```
+
+```{r}
+population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=0.008, RR_T_car=0.49, RR_T_dig=0.88, horizon=20)
+```
+ 
+```{r}
+Det_CEA_L<-QalyCost(population_over_time, population_over_time_t)
+Det_CEA_L
+```
+
+```{r}
+OWSADAT[4,]<-c("P_dig", Det_CEA_H$ICER[2], Det_CEA_L$ICER[2])
+OWSADAT
+```
+
+# 5. Relative Risk reduction of the risk progresion to Cardiac Chagas disease
+```{r}
+P_card<-BestVariab[1]
+CaMorR<-BestVariab[2]
+DiMorR<-BestVariab[3] # Cucunubá et al. Parasites&Vectors 2016
+P_dig<-BestVariab[4]
+```
+## High value
+### Simulating non-treatment arm
+```{r}
+population_over_time<-Simulate(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=P_dig, horizon=20)
+```
+
+### Simulating the treatment arm
+
+```{r}
+population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=P_dig, RR_T_car=1.00, RR_T_dig=0.88, horizon=20)
+```
+
+# Calculate Qalys and costs 
+
+```{r}
+Det_CEA_H<-QalyCost(population_over_time, population_over_time_t)
+Det_CEA_H
+```
+## low value
+```{r}
+population_over_time<-Simulate(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=P_dig, horizon=20)
+```
+
+```{r}
+population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=P_dig, RR_T_car=0.19, RR_T_dig=0.88, horizon=20)
+```
+ 
+```{r}
+Det_CEA_L<-QalyCost(population_over_time, population_over_time_t)
+Det_CEA_L
+```
+
+```{r}
+OWSADAT[5,]<-c("RR_T_car", Det_CEA_H$ICER[2], Det_CEA_L$ICER[2])
+OWSADAT
+```
+
+# 6. Relative Risk reduction of the risk progresion to Digestive Chagas disease
+```{r}
+P_card<-BestVariab[1]
+CaMorR<-BestVariab[2]
+DiMorR<-BestVariab[3] # Cucunubá et al. Parasites&Vectors 2016
+P_dig<-BestVariab[4]
+```
+## High value
+### Simulating non-treatment arm
+```{r}
+population_over_time<-Simulate(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=P_dig, horizon=20)
+```
+
+### Simulating the treatment arm
+
+```{r}
+population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=P_dig, RR_T_car=0.49, RR_T_dig=1, horizon=20)
+```
+
+# Calculate Qalys and costs 
+
+```{r}
+Det_CEA_H<-QalyCost(population_over_time, population_over_time_t)
+Det_CEA_H
+```
+## low value
+```{r}
+population_over_time<-Simulate(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=P_dig, horizon=20)
+```
+
+```{r}
+population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=P_dig, RR_T_car=0.49, RR_T_dig=0.55, horizon=20)
+```
+ 
+```{r}
+Det_CEA_L<-QalyCost(population_over_time, population_over_time_t)
+Det_CEA_L
+```
+
+```{r}
+OWSADAT[6,]<-c("RR_T_dig", Det_CEA_H$ICER[2], Det_CEA_L$ICER[2])
+OWSADAT
+```
+
+```{r}
+
+base_icer <- -183992.3
+WTP<-33895
+
+# Prepare data for plotting
+tornado_df <- OWSADAT %>%
+  mutate(
+    low = as.numeric(pmin(ICER_low, ICER_high)),
+    high = as.numeric(pmax(ICER_low, ICER_high))
+  ) %>%
+  arrange(abs(high - low)) %>%
+  mutate(Parameter = factor(Parameter, levels = Parameter))  # preserve order
+
+# Plot
+ggplot(tornado_df) +
+  geom_segment(aes(x = Parameter, xend = Parameter,
+                   y = low, yend = high, color = Parameter),
+               linewidth = 6) +
+  geom_hline(yintercept = base_icer, linetype = "dashed") +
+  geom_hline(yintercept = WTP, linetype = "solid") +
+  coord_flip() +
+  labs(
+    title = "Tornado Plot of ICER",
+    x = "Parameter",
+    y = "ICER (2023€ per QALY)"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
 ```

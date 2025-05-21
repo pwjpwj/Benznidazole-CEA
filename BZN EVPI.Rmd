@@ -1,0 +1,165 @@
+---
+title: "BZN Perf Infor"
+author: "Philip Wikman"
+date: "2025-05-17"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Conceptual Definition of EVPI
+EVPI is the maximum amount a decision-maker should be willing to pay to eliminate all uncertainty in the model parameters. It represents the difference between the expected value of decision-making with perfect information and the expected value under current uncertainty.
+
+## To calculate EVPI, you need:
+
+A probability distribution (e.g. from PSA) for each uncertain parameter.
+
+A net monetary benefit (NMB) framework:
+
+NMB =(𝜆×Effectiveness)−Cost
+
+where λ is the willingness-to-pay (WTP) threshold per QALY.
+
+## Assuming you already have a PSA dataset (e.g., from 10,000 simulations), the steps are:
+
+Step 1. Compute NMB for each strategy per simulation
+Step 2. Find the optimal strategy per simulation
+Step 3. Average best NMB across simulations (i.e., expected value with perfect information)
+Step 4. Compute expected NMB of current best strategy (i.e., expected value under uncertainty)
+Step 5. EVPI = EVwPI - EVwCI
+
+
+```{r}
+# Paquetes necesarios
+library(dplyr)
+library(ggplot2)
+library(MASS)
+library(tidyr)
+library(ggplot2)
+source("calculate_qalys_costs.R")
+source("Simulate.R")
+source("Simulate_t.R")
+source("QalyCost.R")
+source("invbeta.R")
+source("generate_rr_lognormal.R")
+```
+
+
+```{r}
+# Definir parámetros del modelo
+cycle_length <- 1        # Longitud de cada ciclo (en años)
+discount_rate <- 0.03    # Tasa de descuento anual
+BestVariab<-as.numeric(as.vector(readRDS("BestVariab_100000.RDS")))
+grupos_sexo<-c("Hombre", "Mujer")
+states <- c("Chronic_Asymptomatic", "Cardiac", "Digestive", "Death")
+grupos_edad<-c("15-19", "20-24", "25-29", "30-34", "35-39", "40-44", "45-49", "50-54", "55-59", "60-64", "65-69")
+# Estados de salud
+
+P_card<-BestVariab[1]
+CaMorR<-BestVariab[2]
+DiMorR<-BestVariab[3] # Cucunubá et al. Parasites&Vectors 2016
+P_card_t<-BestVariab[1]*0.49
+P_dig<-BestVariab[4]
+P_dig_t<-BestVariab[4]*0.88
+
+P_mort_m<-c(0.00015, 0.00037, 0.00044, 0.00054, 0.00077, 0.00095, 0.00161, 0.00289, 0.00543, 0.00893, 0.01401)
+P_mort_W<-c(0.00014, 0.00016, 0.00015, 0.00023, 0.00037, 0.00062, 0.00096, 0.00158, 0.00273, 0.00429, 0.00648)
+
+qaly_weights <- c(
+  Chronic_Asymptomatic = 0.9625,
+  Cardiac = 0.7171,
+  Digestive = 0.80,
+  Death = 0
+)
+
+costs <- c(
+  Chronic_Asymptomatic = 478,
+  Cardiac = 11976.53,
+  Digestive = 858.82,
+  Death = 0
+)
+
+discount_rate <- 0.03  # 3% discount rate
+repeats<-1000
+ParameterDat<-data.frame(matrix(NA, nrow=repeats, ncol=6))
+psa_df<-matrix(NA, nrow=repeats, ncol=4)
+colnames(PSADAT)<-c("AQALYs", "ACosts", "ICER")
+set.seed(123)
+
+  P_card<-invbeta(mu=0.0076, low=0.013, high=0.03, n=repeats)
+  CaMorR<-generate_rr_lognormal(1.1,3,1.57, n=repeats)
+  DiMorR<-generate_rr_lognormal(0.9,1.5, 1, n=repeats)
+  P_dig<-invbeta(mu=0.027, low=0.008, high=0.035, n=repeats)
+  RR_T_car<-generate_rr_lognormal(0.19,1.25,0.49, n=repeats)
+  RR_T_dig<-generate_rr_lognormal(0.55,1.42,0.88, n=repeats)
+  
+for (i in 1:repeats){ 
+  ParameterDat[i,1]<-P_card[i]
+  ParameterDat[i,2]<-CaMorR[i]
+  ParameterDat[i,3]<-DiMorR[i]
+  ParameterDat[i,4]<-P_dig[i]
+  ParameterDat[i,5]<-RR_T_car[i]
+  ParameterDat[i,6]<-RR_T_dig[i]
+}
+
+for (i in 1:repeats){
+### Simulating non-treatment arm
+population_over_time<-Simulate(P_card=P_card[i], CaMorR=CaMorR[i], DiMorR=DiMorR[i], P_dig=P_dig[i], horizon=20)
+
+### Simulating the treatment arm
+
+population_over_time_t<-Simulate_t(P_card=P_card[i], CaMorR=CaMorR[i], DiMorR=DiMorR[i], P_dig=P_dig[i], RR_T_car=RR_T_car[i], RR_T_dig=RR_T_dig[i], horizon=20)
+
+
+# Calculate Qalys and costs 
+Det_CEA_H<-QalyCost(population_over_time, population_over_time_t)
+# Assume psa_df is a data.frame with QALYs and costs for 2 strategies over N sims
+psa_df[i,]<-as.numeric(c(Det_CEA_H[2,1], Det_CEA_H[1,1], Det_CEA_H[2,2], Det_CEA_H[1,2]))
+
+
+# Progresion counter
+cat(sprintf("\rProgress: %d%% | Iteration %d of %d", round(i / repeats * 100), i, repeats))
+    flush.console()
+}
+# Convert PSADAT to a data frame
+colnames(psa_df)<-c("QALYs_treated","QALYs_control", "Cost_treated", "Cost_control" )
+psa_df
+```
+
+```{r}
+psa_df<-as.data.frame(psa_df)
+WTP <- 33895  # example threshold
+
+psa_df <- psa_df %>%
+  mutate(
+    NMB_treated = WTP * QALYs_treated - Cost_treated,
+    NMB_control = WTP * QALYs_control - Cost_control,
+    Best_NMB = pmax(NMB_treated, NMB_control)
+  )
+
+EVwPI <- mean(psa_df$Best_NMB)
+EVwPI
+EVwCI <- max(mean(psa_df$NMB_treated), mean(psa_df$NMB_control))
+EVwCI
+EVPI <- EVwPI - EVwCI
+EVPI
+```
+```{r}
+psa_df <- psa_df %>%
+  mutate(
+    inc_NMB = NMB_treated - NMB_control,
+    cum_mean_NMB = cumsum(inc_NMB) / row_number()
+  )
+ggplot(psa_df, aes(x = 1:nrow(psa_df), y = cum_mean_NMB)) +
+  geom_line(color = "blue") +
+  labs(
+    title = "Convergence of Incremental Net Monetary Benefit (NMB)",
+    x = "Number of Simulations",
+    y = "Cumulative Mean Incremental NMB (€)"
+  ) +
+  theme_minimal()+ 
+  geom_hline(yintercept = mean(psa_df$inc_NMB), linetype = "dashed", color = "red")
+
+```
