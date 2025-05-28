@@ -238,7 +238,7 @@ Simulate<-function(P_card, CaMorR, DiMorR, P_dig, horizon){
                                  "50-54" = "55-59",
                                  "55-59" = "60-64",
                                  "60-64" = "65-69",
-                                 "65-69" = "15-99",
+                                 "65-69" = "70-74",
                                  age  # If the age group is not in the switch statement, keep it
         )
         
@@ -252,11 +252,11 @@ Simulate<-function(P_card, CaMorR, DiMorR, P_dig, horizon){
     }
     
     # Inject newborns into 15–19 group, Chronic_Asymptomatic state
-    start_state_index <- which(states == "Chronic_Asymptomatic")
-    for (sex in grupos_sexo) {
-      new_population[[sex]][["15-19"]][start_state_index] <-
-        new_population[[sex]][["15-19"]][start_state_index] + total_deaths / length(grupos_sexo)
-    }
+    #start_state_index <- which(states == "Chronic_Asymptomatic")
+    #for (sex in grupos_sexo) {
+    #  new_population[[sex]][["15-19"]][start_state_index] <-
+    #    new_population[[sex]][["15-19"]][start_state_index] + total_deaths / length(grupos_sexo)
+    #}
     
     # Save population state at this time step
     population_over_time[[t]] <- new_population

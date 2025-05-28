@@ -30,7 +30,7 @@ reps_SMSE<-vector(mode="numeric", length=length(reps))
 
 P_card_v<-invbeta(mu=0.019, low=0.013, high=0.03, n=reps)
 CaMorR_v<-generate_rr_lognormal(2,12,n=reps)
-DiMorR_v<-generate_rr_lognormal(0.9,1.1,n=reps)
+DiMorR_v<-generate_rr_lognormal(0.9,2,n=reps)
 P_dig_v<-invbeta(mu=0.011, low=0.008, high=0.0136, n=reps)
 
 for (i in 1:reps){
@@ -38,16 +38,15 @@ cat(sprintf("\rProgress: %d%% | Iteration %d of %d", round(i / reps * 100), i, r
 flush.console()
 
 # Definir parámetros del modelo
-horizon <- 10            # Horizonte temporal (en años)
+horizon <- 5            # Horizonte temporal (en años)
 cycle_length <- 1        # Longitud de cada ciclo (en años)
-discount_rate <- 0.03    # Tasa de descuento anual
 
 # Estados de salud
 states <- c("Chronic_Asymptomatic", "Cardiac", "Digestive", "Death")
 grupos_edad<-c("15-19", "20-24", "25-29", "30-34", "35-39", "40-44", "45-49", "50-54", "55-59", "60-64", "65-69")
 grupos_sexo<-c("Hombre", "Mujer")
-deaths<-c(4,2,4,5,6,3,0,7,5,9)
-years<-c(2009:2018)
+deaths<-c(3,0,7,5,9)
+years<-c(2014:2018)
 
 P_card<-P_card_v[i]
 CaMorR<-CaMorR_v[i]
@@ -253,7 +252,7 @@ for (t in 1:horizon) {
         current_pop<-matrix(as.numeric(current_pop), nrow = 1)
         # Compute next year's population distribution
         
-       # Split population into those who stay and those who move to next age group
+        # Split population into those who stay and those who move to next age group
       moving_out <- prop_moving * current_pop
       staying <- (1 - prop_moving) * current_pop
 
@@ -267,8 +266,8 @@ for (t in 1:horizon) {
       total_deaths <- total_deaths + deaths_from_group
 
       # Remove deaths
-      moved_pop[death_index] <- 0
-      stayed_pop[death_index] <- 0
+      # moved_pop[death_index] <- 0
+      # stayed_pop[death_index] <- 0
 
       # Calculate Chagas deaths
       cardiac_chagas_index <- which(states == "Cardiac")
@@ -287,7 +286,7 @@ for (t in 1:horizon) {
                                "50-54" = "55-59",
                                "55-59" = "60-64",
                                "60-64" = "65-69",
-                               "65-69" = "15-19",
+                               "65-69" = "70-74",
                                age  # If the age group is not in the switch statement, keep it
       )
 
@@ -301,11 +300,11 @@ for (t in 1:horizon) {
   }
   
   # Inject newborns into 15–19 group, Chronic_Asymptomatic state
-  start_state_index <- which(states == "Chronic_Asymptomatic")
-  for (sex in grupos_sexo) {
-    new_population[[sex]][["15-19"]][start_state_index] <-
-      new_population[[sex]][["15-19"]][start_state_index] + total_deaths / length(grupos_sexo)
-  }
+  #start_state_index <- which(states == "Chronic_Asymptomatic")
+  #for (sex in grupos_sexo) {
+  #  new_population[[sex]][["15-19"]][start_state_index] <-
+  #    new_population[[sex]][["15-19"]][start_state_index] + total_deaths / #length(grupos_sexo)
+ # }
 
   # Save population state at this time step
   population_over_time[[t]] <- new_population
@@ -349,7 +348,7 @@ deaths_chagas_df <- do.call(rbind, lapply(seq_along(deaths_chagas_over_time), fu
 }))
 
 deaths_chagas_disease <- deaths_chagas_df%>%group_by(year)%>%summarise(count=sum(deaths, na.rm=TRUE))%>%
-  mutate(year=2009:2018)
+  mutate(year=2014:2018)
 deaths_chagas_disease2<-cbind(deaths_chagas_disease, deaths)
 
 MSE<-(deaths_chagas_disease2$deaths-deaths_chagas_disease2$count)^2
@@ -372,6 +371,7 @@ saveRDS(variab_df, "variab_df.RDS")
 
 ```{r}
 which.min(reps_SMSE)
+min(reps_SMSE)
 BestVariab<-variab_df[which.min(reps_SMSE),]
 BestVariab
 saveRDS(BestVariab, "BestVariab_100000.RDS")

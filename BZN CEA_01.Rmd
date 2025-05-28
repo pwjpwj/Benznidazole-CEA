@@ -392,8 +392,8 @@ for (t in 1:horizon) {
       total_deaths <- total_deaths + deaths_from_group
 
       # Remove deaths
-      moved_pop[death_index] <- 0
-      stayed_pop[death_index] <- 0
+      #moved_pop[death_index] <- 0
+      #stayed_pop[death_index] <- 0
 
       # Calculate Chagas deaths
       cardiac_chagas_index <- which(states == "Cardiac")
@@ -412,7 +412,7 @@ for (t in 1:horizon) {
                                "50-54" = "55-59",
                                "55-59" = "60-64",
                                "60-64" = "65-69",
-                               "65-69" = "15-99",
+                               "65-69" = "70-74",
                                age  # If the age group is not in the switch statement, keep it
       )
 
@@ -426,11 +426,11 @@ for (t in 1:horizon) {
   }
   
   # Inject newborns into 15–19 group, Chronic_Asymptomatic state
-  start_state_index <- which(states == "Chronic_Asymptomatic")
-  for (sex in grupos_sexo) {
-    new_population[[sex]][["15-19"]][start_state_index] <-
-      new_population[[sex]][["15-19"]][start_state_index] + total_deaths / length(grupos_sexo)
-  }
+  #start_state_index <- which(states == "Chronic_Asymptomatic")
+  #for (sex in grupos_sexo) {
+  #  new_population[[sex]][["15-19"]][start_state_index] <-
+  #    new_population[[sex]][["15-19"]][start_state_index] + total_deaths /     #length(grupos_sexo)
+  #}
 
   # Save population state at this time step
   population_over_time[[t]] <- new_population
@@ -561,8 +561,8 @@ for (t in 1:horizon) {
       total_deaths_t <- total_deaths_t + deaths_from_group_t
 
       # Remove deaths
-      moved_pop[death_index] <- 0
-      stayed_pop[death_index] <- 0
+      #moved_pop[death_index] <- 0
+      #stayed_pop[death_index] <- 0
 
       # Calculate Chagas deaths
       cardiac_chagas_index <- which(states == "Cardiac")
@@ -581,7 +581,7 @@ for (t in 1:horizon) {
                                "50-54" = "55-59",
                                "55-59" = "60-64",
                                "60-64" = "65-69",
-                               "65-69" = "15-99",
+                               "65-69" = "70-74",
                                age  # If the age group is not in the switch statement, keep it
       )
 
@@ -595,11 +595,11 @@ for (t in 1:horizon) {
   }
   
   # Inject newborns into 15–19 group, Chronic_Asymptomatic state
-  start_state_index <- which(states == "Chronic_Asymptomatic")
-  for (sex in grupos_sexo) {
-    new_population_t[[sex]][["15-19"]][start_state_index] <-
-      new_population_t[[sex]][["15-19"]][start_state_index] + total_deaths_t / length(grupos_sexo)
-  }
+  #start_state_index <- which(states == "Chronic_Asymptomatic")
+  #for (sex in grupos_sexo) {
+  #  new_population_t[[sex]][["15-19"]][start_state_index] <-
+  #    new_population_t[[sex]][["15-19"]][start_state_index] + total_deaths_t   #length(grupos_sexo)
+  #}
 
   # Save population state at this time step
   population_over_time_t[[t]] <- new_population_t
