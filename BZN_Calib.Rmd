@@ -23,7 +23,7 @@ library(tidyr)
 horizon <- 5            # Horizonte temporal (en años)
 cycle_length <- 1        # Longitud de cada ciclo (en años)
 discount_rate <- 0.03    # Tasa de descuento anual
-BestVariab<-as.numeric(as.vector(readRDS("BestVariab_100.RDS")))
+BestVariab<-as.numeric(as.vector(readRDS("BestVariab_100000.RDS")))
 
 # Estados de salud
 states <- c("Chronic_Asymptomatic", "Cardiac", "Digestive", "Death")
@@ -382,10 +382,10 @@ df_cal<-df_long%>%
   summarise(total_count=sum(Count, na.rm=TRUE))
 
 ggplot(deaths_chagas_disease2, aes(x = year, y = count)) +
-  geom_line(color="red", linewidth=1) + 
-  geom_point(aes(y=deaths), color="blue")+
-  #geom_smooth(aes(y = count, color = "Model"), method = "lm", se = FALSE) +
-  #geom_smooth(aes(y = deaths, colour = "Deaths"), method = "lm", se = FALSE) +
+  geom_point(color="blue", linewidth=1) + 
+  geom_point(aes(y=deaths), color="red")+
+  geom_smooth(aes(y = count, color = "Model"), method = "lm") +
+  geom_smooth(aes(y = deaths, colour = "Deaths"), method = "lm") +
   labs(
     title = "Evolution of Deaths Over Time",
     x = "Year",

@@ -143,7 +143,7 @@ ceac_data <- data.frame(
 )
 
 # Plot CEAC
-ggplot(ceac_data, aes(x = WTP, y = CE_Probability)) +
+CEPC<-ggplot(ceac_data, aes(x = WTP, y = CE_Probability)) +
   geom_line(color = "darkgreen", linewidth = 1) +
   ylim(0,1) +
   labs(
@@ -152,4 +152,8 @@ ggplot(ceac_data, aes(x = WTP, y = CE_Probability)) +
     y = "Probability Cost-Effective"
   ) +
   theme_minimal()
+
+jpeg("CEPC.jpeg", width=1000, height=1000, res=300, units="px")
+CEPC
+dev.off()
 ```
