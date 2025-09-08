@@ -24,7 +24,7 @@ source("generate_rr_lognormal.R")
 ```{r}
 set.seed(123)
 
-reps<-100000
+reps<-100
 reps_SMSE<-vector(mode="numeric", length=length(reps))
   
 
@@ -38,14 +38,14 @@ cat(sprintf("\rProgress: %d%% | Iteration %d of %d", round(i / reps * 100), i, r
 flush.console()
 
 # Definir parámetros del modelo
-horizon <- 5            # Horizonte temporal (en años)
+horizon <- 5           # Horizonte temporal (en años)
 cycle_length <- 1        # Longitud de cada ciclo (en años)
 
 # Estados de salud
 states <- c("Chronic_Asymptomatic", "Cardiac", "Digestive", "Death")
 grupos_edad<-c("15-19", "20-24", "25-29", "30-34", "35-39", "40-44", "45-49", "50-54", "55-59", "60-64", "65-69")
 grupos_sexo<-c("Hombre", "Mujer")
-deaths<-c(3,0,7,5,9)
+deaths<-c(3,0,7,5,9)#4,2,4,5,6,
 years<-c(2014:2018)
 
 P_card<-P_card_v[i]
@@ -356,16 +356,44 @@ MSE
 SMSE<-sum(MSE)/length(MSE)
 SMSE
 
-reps_SMSE[i]<-SMSE
+#reps_SMSE[i]<-SMSE
+#reps_SMSE
+#### Fitting Digestive Chagas disease to 10% prevalence
 
+digestive_chagas_df <- do.call(rbind, lapply(seq_along(population_over_time), function(t) {
+  data <- population_over_time[[t]]
+  do.call(rbind, lapply(names(data), function(sex) {
+    do.call(rbind, lapply(names(data[[sex]]), function(age) {
+      data.frame(
+        year = t,
+        sex = sex,
+        age_group = age,
+        digestive = data[[sex]][[age]][3],
+        total=sum(data[[sex]][[age]])
+      )
+    }))
+  }))
+}))
+
+
+digestive_chagas_disease <- digestive_chagas_df%>%group_by(year)%>%summarise(count=sum(digestive, na.rm=TRUE), total=sum(total))%>%mutate(prop=count/total, year=2014:2018)
+
+### Falta calcular la referencia con la que ajustar la prevalencia de patología digestiva.
+digestive_prev<-0.1
+
+MSE_dig<-(digestive_chagas_disease$prop[1:5]-digestive_prev)^2
+MSE_dig
+SMSE_dig<-sum(MSE_dig)/length(MSE_dig)
+SMSE_dig
+
+reps_SMSE[i]<-100000*SMSE_dig+SMSE
 }
-
 reps_SMSE
 ```
 ```{r}
 variab_df<-tibble(P_card_v, CaMorR_v, DiMorR_v, P_dig_v)
 variab_df
-saveRDS(variab_df, "variab_df.RDS")
+saveRDS(variab_df, "variab_df_dig.RDS")
 ```
 
 
@@ -374,7 +402,7 @@ which.min(reps_SMSE)
 min(reps_SMSE)
 BestVariab<-variab_df[which.min(reps_SMSE),]
 BestVariab
-saveRDS(BestVariab, "BestVariab_100000.RDS")
+saveRDS(BestVariab, "BestVariab__dig_.RDS")
 ```
 
 

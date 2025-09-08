@@ -35,12 +35,6 @@ states <- c("Chronic_Asymptomatic", "Cardiac", "Digestive", "Death")
 grupos_edad<-c("15-19", "20-24", "25-29", "30-34", "35-39", "40-44", "45-49", "50-54", "55-59", "60-64", "65-69")
 # Estados de salud
 
-P_card<-BestVariab[1]
-CaMorR<-BestVariab[2]
-DiMorR<-BestVariab[3] # Cucunubá et al. Parasites&Vectors 2016
-P_card_t<-BestVariab[1]*0.49
-P_dig<-BestVariab[4]
-P_dig_t<-BestVariab[4]*0.88
 
 P_mort_m<-c(0.00015, 0.00037, 0.00044, 0.00054, 0.00077, 0.00095, 0.00161, 0.00289, 0.00543, 0.00893, 0.01401)
 P_mort_W<-c(0.00014, 0.00016, 0.00015, 0.00023, 0.00037, 0.00062, 0.00096, 0.00158, 0.00273, 0.00429, 0.00648)
@@ -53,9 +47,9 @@ qaly_weights <- c(
 )
 
 costs <- c(
-  Chronic_Asymptomatic = 478,
-  Cardiac = 11976.53,
-  Digestive = 858.82,
+  Chronic_Asymptomatic = 380.26,
+  Cardiac = 11592.27,
+  Digestive = 554.56,
   Death = 0
 )
 
@@ -70,12 +64,12 @@ set.seed(123)
 ```{r}
 
   
-  P_card<-invbeta(mu=0.0076, low=0.013, high=0.03, n=repeats)
-  CaMorR<-generate_rr_lognormal(1.1,3,1.57, n=repeats)
-  DiMorR<-generate_rr_lognormal(0.9,1.5, 1, n=repeats)
-  P_dig<-invbeta(mu=0.027, low=0.008, high=0.035, n=repeats)
-  RR_T_car<-generate_rr_lognormal(0.19,1.25,0.49, n=repeats)
-  RR_T_dig<-generate_rr_lognormal(0.55,1.42,0.88, n=repeats)
+  P_card<-invbeta(mu=0.0175, low=0.01, high=0.03, n=repeats)
+  CaMorR<-generate_rr_lognormal(1.1,5,2.45, n=repeats)
+  DiMorR<-generate_rr_lognormal(1,2, 1.06, n=repeats)
+  P_dig<-invbeta(mu=0.014,low=0.01, high=0.015, n=repeats)
+  RR_T_car<-generate_rr_lognormal(0.25,1.18,0.54, n=repeats)
+  RR_T_dig<-generate_rr_lognormal(0.60,1.37,0.90, n=repeats)
   
 for (i in 1:repeats){ 
   ParameterDat[i,1]<-P_card[i]
@@ -128,14 +122,14 @@ ggplot(PSADAT_df, aes(x = AQALYs, y = ACosts)) +
     x = expression(Delta~"QALYs"),
     y = expression(Delta~"Costs (2023€)")
   ) +
-  stat_ellipse()
+  stat_ellipse()+
   theme_minimal()
 
 ```
 
 ```{r}
 # Define WTP thresholds
-wtp <- seq(-150000, 30000, by = 500)
+wtp <- seq(-200000, 50000, by = 500)
 
 # For each WTP, calculate probability intervention is cost-effective
 ce_prob <- sapply(wtp, function(w) {
@@ -149,13 +143,17 @@ ceac_data <- data.frame(
 )
 
 # Plot CEAC
-ggplot(ceac_data, aes(x = WTP, y = CE_Probability)) +
+CEPC<-ggplot(ceac_data, aes(x = WTP, y = CE_Probability)) +
   geom_line(color = "darkgreen", linewidth = 1) +
   ylim(0,1) +
   labs(
     title = "Cost-Effectiveness Acceptability Curve (CEAC)",
-    x = "Willingness-to-pay Threshold (€ per QALY)",
+    x = "Willingness-to-pay Threshold (2023€ per QALY)",
     y = "Probability Cost-Effective"
   ) +
   theme_minimal()
+
+#jpeg("CEPC.jpeg", width=1000, height=1000, res=300, units="px")
+CEPC
+#dev.off()
 ```

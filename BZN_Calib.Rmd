@@ -20,7 +20,7 @@ library(tidyr)
 
 ```{r}
 # Definir parámetros del modelo
-horizon <- 10            # Horizonte temporal (en años)
+horizon <- 5           # Horizonte temporal (en años)
 cycle_length <- 1        # Longitud de cada ciclo (en años)
 discount_rate <- 0.03    # Tasa de descuento anual
 BestVariab<-as.numeric(as.vector(readRDS("BestVariab_100000.RDS")))
@@ -29,15 +29,15 @@ BestVariab<-as.numeric(as.vector(readRDS("BestVariab_100000.RDS")))
 states <- c("Chronic_Asymptomatic", "Cardiac", "Digestive", "Death")
 grupos_edad<-c("15-19", "20-24", "25-29", "30-34", "35-39", "40-44", "45-49", "50-54", "55-59", "60-64", "65-69")
 grupos_sexo<-c("Hombre", "Mujer")
-deaths<-c(4,2,4,5,6,3,0,7,5,9)
-years<-c(2009:2018)
+deaths<-c(3,0,7,5,9)#4,2,4,5,6,
+years<-c(2014:2018)
 
 P_card<-BestVariab[1]
 CaMorR<-BestVariab[2]
 DiMorR<-BestVariab[3] # Cucunubá et al. Parasites&Vectors 2016
-P_card_t<-BestVariab[1]*0.49
+P_card_t<-BestVariab[1]*0.54
 P_dig<-BestVariab[4]
-P_dig_t<-BestVariab[4]*0.88
+P_dig_t<-BestVariab[4]*0.90
 
 P_mort_m<-c(0.00015, 0.00037, 0.00044, 0.00054, 0.00077, 0.00095, 0.00161, 0.00289, 0.00543, 0.00893, 0.01401)
 P_mort_W<-c(0.00014, 0.00016, 0.00015, 0.00023, 0.00037, 0.00062, 0.00096, 0.00158, 0.00273, 0.00429, 0.00648)
@@ -233,7 +233,7 @@ for (t in 1:horizon) {
         trans_mat <- matrix(as.numeric(transition_matrices[[sex]][[age]]), nrow = 4, ncol = 4)
       
         # Current population in this (sex, age) group
-        current_pop <- unlist(population[[sex]][[age]])
+        current_pop<-unlist(population[[sex]][[age]])
         current_pop<-matrix(as.numeric(current_pop), nrow = 1)
         # Compute next year's population distribution
         
@@ -251,8 +251,8 @@ for (t in 1:horizon) {
       total_deaths <- total_deaths + deaths_from_group
 
       # Remove deaths
-      moved_pop[death_index] <- 0
-      stayed_pop[death_index] <- 0
+      #moved_pop[death_index] <- 0
+      #stayed_pop[death_index] <- 0
 
       # Calculate Chagas deaths
       cardiac_chagas_index <- which(states == "Cardiac")
@@ -271,7 +271,7 @@ for (t in 1:horizon) {
                                "50-54" = "55-59",
                                "55-59" = "60-64",
                                "60-64" = "65-69",
-                               "65-69" = "15-99",
+                               "65-69" = "70-74",
                                age  # If the age group is not in the switch statement, keep it
       )
 
@@ -285,11 +285,11 @@ for (t in 1:horizon) {
   }
   
   # Inject newborns into 15–19 group, Chronic_Asymptomatic state
-  start_state_index <- which(states == "Chronic_Asymptomatic")
-  for (sex in grupos_sexo) {
-    new_population[[sex]][["15-19"]][start_state_index] <-
-      new_population[[sex]][["15-19"]][start_state_index] + total_deaths / length(grupos_sexo)
-  }
+ # start_state_index <- which(states == "Chronic_Asymptomatic")
+  #for (sex in grupos_sexo) {
+   # new_population[[sex]][["15-19"]][start_state_index] <-
+    #  new_population[[sex]][["15-19"]][start_state_index] + total_deaths / #length(grupos_sexo)
+ # }
 
   # Save population state at this time step
   population_over_time[[t]] <- new_population
@@ -335,7 +335,7 @@ df_long$Age_Group <- factor(df_long$Age_Group, levels = grupos_edad)
 ggplot(df_long, aes(x=Year, y = Count, fill = State)) +
   geom_col(alpha = 0.6, position="stack") +  # Stacked area plot
   #geom_smooth(aes(group = State), method = "loess", color = "black", size = 0.5, se = FALSE) +
-  facet_wrap(~Sex+Age_Group, scales = "free_y") +  # Facet by Sex and Age Group
+  #facet_wrap(~Sex+Age_Group, scales = "free_y") +  # Facet by Sex and Age Group
   labs(
     title = "Evolution of Health States Over Time",
     x = "Year",
@@ -365,7 +365,7 @@ deaths_chagas_df <- do.call(rbind, lapply(seq_along(deaths_chagas_over_time), fu
 }))
 
 deaths_chagas_disease <- deaths_chagas_df%>%group_by(year)%>%summarise(count=sum(deaths, na.rm=TRUE))%>%
-  mutate(year=2009:2018)
+  mutate(year=2014:2018)
 deaths_chagas_disease2<-cbind(deaths_chagas_disease, deaths)
 
 # Convert data to long format for ggplot
@@ -382,10 +382,10 @@ df_cal<-df_long%>%
   summarise(total_count=sum(Count, na.rm=TRUE))
 
 ggplot(deaths_chagas_disease2, aes(x = year, y = count)) +
-  geom_point(color="red") + 
-  geom_point(aes(y=deaths), color="blue")+
-  geom_smooth(aes(y = count, color = "Model"), method = "lm", se = FALSE) +
-  geom_smooth(aes(y = deaths, colour = "Deaths"), method = "lm", se = FALSE) +
+  geom_point(color="blue", linewidth=1) + 
+  geom_point(aes(y=deaths), color="red")+
+  geom_smooth(aes(y = count, color = "Model"), method = "lm") +
+  geom_smooth(aes(y = deaths, colour = "Deaths"), method = "lm") +
   labs(
     title = "Evolution of Deaths Over Time",
     x = "Year",

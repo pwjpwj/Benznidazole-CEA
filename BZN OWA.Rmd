@@ -36,9 +36,9 @@ grupos_edad<-c("15-19", "20-24", "25-29", "30-34", "35-39", "40-44", "45-49", "5
 P_card<-BestVariab[1]
 CaMorR<-BestVariab[2]
 DiMorR<-BestVariab[3] # Cucunubá et al. Parasites&Vectors 2016
-P_card_t<-BestVariab[1]*0.49
+P_card_t<-BestVariab[1]*0.54
 P_dig<-BestVariab[4]
-P_dig_t<-BestVariab[4]*0.88
+P_dig_t<-BestVariab[4]*0.90
 
 P_mort_m<-c(0.00015, 0.00037, 0.00044, 0.00054, 0.00077, 0.00095, 0.00161, 0.00289, 0.00543, 0.00893, 0.01401)
 P_mort_W<-c(0.00014, 0.00016, 0.00015, 0.00023, 0.00037, 0.00062, 0.00096, 0.00158, 0.00273, 0.00429, 0.00648)
@@ -51,9 +51,9 @@ qaly_weights <- c(
 )
 
 costs <- c(
-  Chronic_Asymptomatic = 478,
-  Cardiac = 11976.53,
-  Digestive = 858.82,
+  Chronic_Asymptomatic = 380.26,
+  Cardiac = 11592.27,
+  Digestive = 554.56,
   Death = 0
 )
 discount_rate <- 0.03  # 3% discount rate
@@ -73,22 +73,24 @@ population_over_time<-Simulate(P_card=0.03, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=
 ### Simulating the treatment arm
 
 ```{r}
-population_over_time_t<-Simulate_t(P_card=0.03, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=P_dig, RR_T_car=0.49, RR_T_dig=0.88, horizon=20)
+population_over_time_t<-Simulate_t(P_card=0.03, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=P_dig, RR_T_car=0.54, RR_T_dig=0.90, horizon=20)
 ```
 
 # Calculate Qalys and costs 
 
 ```{r}
 Det_CEA_H<-QalyCost(population_over_time, population_over_time_t)
+
+
 Det_CEA_H
 ```
 ## low value
 ```{r}
-population_over_time<-Simulate(P_card=0.001, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=P_dig, horizon=20)
+population_over_time<-Simulate(P_card=0.01, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=P_dig, horizon=20)
 ```
 
 ```{r}
-population_over_time_t<-Simulate_t(P_card=0.001, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=P_dig, RR_T_car=0.49, RR_T_dig=0.88, horizon=20)
+population_over_time_t<-Simulate_t(P_card=0.01, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=P_dig, RR_T_car=0.54, RR_T_dig=0.90, horizon=20)
 ```
  
 ```{r}
@@ -106,20 +108,20 @@ OWSADAT
 P_card<-BestVariab[1]
 CaMorR<-BestVariab[2]
 DiMorR<-BestVariab[3] 
-P_card_t<-BestVariab[1]*0.49
+P_card_t<-BestVariab[1]*0.54
 P_dig<-BestVariab[4]
-P_dig_t<-BestVariab[4]*0.88
+P_dig_t<-BestVariab[4]*0.90
 ```
 ## High value
 ### Simulating non-treatment arm
 ```{r}
-population_over_time<-Simulate(P_card=P_card, CaMorR=3, DiMorR=DiMorR, P_dig=P_dig, horizon=20)
+population_over_time<-Simulate(P_card=P_card, CaMorR=5, DiMorR=DiMorR, P_dig=P_dig, horizon=20)
 ```
 
 ### Simulating the treatment arm
 
 ```{r}
-population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=3, DiMorR=DiMorR, P_dig=P_dig, RR_T_car=0.49, RR_T_dig=0.88, horizon=20)
+population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=5, DiMorR=DiMorR, P_dig=P_dig, RR_T_car=0.54, RR_T_dig=0.90, horizon=20)
 ```
 
 # Calculate Qalys and costs 
@@ -134,7 +136,7 @@ population_over_time<-Simulate(P_card=P_card, CaMorR=1.1, DiMorR=DiMorR, P_dig=P
 ```
 
 ```{r}
-population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=1.1, DiMorR=DiMorR, P_dig=P_dig, RR_T_car=0.49, RR_T_dig=0.88, horizon=20)
+population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=1.1, DiMorR=DiMorR, P_dig=P_dig, RR_T_car=0.54, RR_T_dig=0.90, horizon=20)
 ```
  
 ```{r}
@@ -152,20 +154,20 @@ OWSADAT
 P_card<-BestVariab[1]
 CaMorR<-BestVariab[2]
 DiMorR<-BestVariab[3] # Cucunubá et al. Parasites&Vectors 2016
-P_card_t<-BestVariab[1]*0.49
+P_card_t<-BestVariab[1]*0.54
 P_dig<-BestVariab[4]
-P_dig_t<-BestVariab[4]*0.88
+P_dig_t<-BestVariab[4]*0.90
 ```
 ## High value
 ### Simulating non-treatment arm
 ```{r}
-population_over_time<-Simulate(P_card=P_card, CaMorR=CaMorR, DiMorR=2.91, P_dig=P_dig, horizon=20)
+population_over_time<-Simulate(P_card=P_card, CaMorR=CaMorR, DiMorR=2.5, P_dig=P_dig, horizon=20)
 ```
 
 ### Simulating the treatment arm
 
 ```{r}
-population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=CaMorR, DiMorR=2.91, P_dig=P_dig, RR_T_car=0.49, RR_T_dig=0.88, horizon=20)
+population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=CaMorR, DiMorR=2.5, P_dig=P_dig, RR_T_car=0.54, RR_T_dig=0.90, horizon=20)
 ```
 
 # Calculate Qalys and costs 
@@ -176,11 +178,11 @@ Det_CEA_H
 ```
 ## low value
 ```{r}
-population_over_time<-Simulate(P_card=P_card, CaMorR=CaMorR, DiMorR=1.5, P_dig=P_dig, horizon=20)
+population_over_time<-Simulate(P_card=P_card, CaMorR=CaMorR, DiMorR=1, P_dig=P_dig, horizon=20)
 ```
 
 ```{r}
-population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=CaMorR, DiMorR=1.5, P_dig=P_dig, RR_T_car=0.49, RR_T_dig=0.88, horizon=20)
+population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=CaMorR, DiMorR=1, P_dig=P_dig, RR_T_car=0.54, RR_T_dig=0.90, horizon=20)
 ```
  
 ```{r}
@@ -198,20 +200,20 @@ OWSADAT
 P_card<-BestVariab[1]
 CaMorR<-BestVariab[2]
 DiMorR<-BestVariab[3] # Cucunubá et al. Parasites&Vectors 2016
-P_card_t<-BestVariab[1]*0.49
+P_card_t<-BestVariab[1]*0.54
 P_dig<-BestVariab[4]
-P_dig_t<-BestVariab[4]*0.88
+P_dig_t<-BestVariab[4]*0.90
 ```
 ## High value
 ### Simulating non-treatment arm
 ```{r}
-population_over_time<-Simulate(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=0.035, horizon=20)
+population_over_time<-Simulate(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=0.015, horizon=20)
 ```
 
 ### Simulating the treatment arm
 
 ```{r}
-population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=0.035, RR_T_car=0.49, RR_T_dig=0.88, horizon=20)
+population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=0.015, RR_T_car=0.54, RR_T_dig=0.90, horizon=20)
 ```
 
 # Calculate Qalys and costs 
@@ -222,11 +224,11 @@ Det_CEA_H
 ```
 ## low value
 ```{r}
-population_over_time<-Simulate(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=0.008, horizon=20)
+population_over_time<-Simulate(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=0.01, horizon=20)
 ```
 
 ```{r}
-population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=0.008, RR_T_car=0.49, RR_T_dig=0.88, horizon=20)
+population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=0.01, RR_T_car=0.49, RR_T_dig=0.88, horizon=20)
 ```
  
 ```{r}
@@ -255,7 +257,7 @@ population_over_time<-Simulate(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_di
 ### Simulating the treatment arm
 
 ```{r}
-population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=P_dig, RR_T_car=1.00, RR_T_dig=0.88, horizon=20)
+population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=P_dig, RR_T_car=1.18, RR_T_dig=0.9, horizon=20)
 ```
 
 # Calculate Qalys and costs 
@@ -270,7 +272,7 @@ population_over_time<-Simulate(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_di
 ```
 
 ```{r}
-population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=P_dig, RR_T_car=0.19, RR_T_dig=0.88, horizon=20)
+population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=P_dig, RR_T_car=0.25, RR_T_dig=0.9, horizon=20)
 ```
  
 ```{r}
@@ -299,7 +301,7 @@ population_over_time<-Simulate(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_di
 ### Simulating the treatment arm
 
 ```{r}
-population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=P_dig, RR_T_car=0.49, RR_T_dig=1, horizon=20)
+population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=P_dig, RR_T_car=0.54, RR_T_dig=1.37, horizon=20)
 ```
 
 # Calculate Qalys and costs 
@@ -314,7 +316,7 @@ population_over_time<-Simulate(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_di
 ```
 
 ```{r}
-population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=P_dig, RR_T_car=0.49, RR_T_dig=0.55, horizon=20)
+population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=P_dig, RR_T_car=0.54, RR_T_dig=0.6, horizon=20)
 ```
  
 ```{r}
@@ -324,12 +326,22 @@ Det_CEA_L
 
 ```{r}
 OWSADAT[6,]<-c("RR_T_dig", Det_CEA_H$ICER[2], Det_CEA_L$ICER[2])
+OWSADAT <- OWSADAT %>%
+  mutate(Parameter = case_when(
+    Parameter == "P_card"     ~ "Prob cardiac disease",
+    Parameter == "CaMorR"     ~ "Cardiac mortality rate",
+    Parameter == "DiMorR"     ~ "Digestive mortality rate",
+    Parameter == "P_dig"      ~ "Prob digestive disease",
+    Parameter == "RR_T_car"   ~ "Risk reduction cardiac disease",
+    Parameter == "RR_T_dig"   ~ "Risk reduction digestive disease",
+    TRUE                      ~ Parameter  # keep others unchanged
+  ))
 OWSADAT
 ```
 
 ```{r}
 
-base_icer <- -183992.3
+base_icer <- -61294.07
 WTP<-33895
 
 # Prepare data for plotting

@@ -34,9 +34,9 @@ grupos_sexo<-c("Hombre", "Mujer")
 P_card<-BestVariab[1]
 CaMorR<-BestVariab[2]
 DiMorR<-BestVariab[3] # Cucunubá et al. Parasites&Vectors 2016
-P_card_t<-BestVariab[1]*0.49
+P_card_t<-BestVariab[1]*0.54
 P_dig<-BestVariab[4]
-P_dig_t<-BestVariab[4]*0.88
+P_dig_t<-BestVariab[4]*0.90
 
 P_mort_m<-c(0.00015, 0.00037, 0.00044, 0.00054, 0.00077, 0.00095, 0.00161, 0.00289, 0.00543, 0.00893, 0.01401)
 P_mort_W<-c(0.00014, 0.00016, 0.00015, 0.00023, 0.00037, 0.00062, 0.00096, 0.00158, 0.00273, 0.00429, 0.00648)
@@ -392,8 +392,8 @@ for (t in 1:horizon) {
       total_deaths <- total_deaths + deaths_from_group
 
       # Remove deaths
-      moved_pop[death_index] <- 0
-      stayed_pop[death_index] <- 0
+      #moved_pop[death_index] <- 0
+      #stayed_pop[death_index] <- 0
 
       # Calculate Chagas deaths
       cardiac_chagas_index <- which(states == "Cardiac")
@@ -412,7 +412,7 @@ for (t in 1:horizon) {
                                "50-54" = "55-59",
                                "55-59" = "60-64",
                                "60-64" = "65-69",
-                               "65-69" = "15-99",
+                               "65-69" = "70-74",
                                age  # If the age group is not in the switch statement, keep it
       )
 
@@ -426,11 +426,11 @@ for (t in 1:horizon) {
   }
   
   # Inject newborns into 15–19 group, Chronic_Asymptomatic state
-  start_state_index <- which(states == "Chronic_Asymptomatic")
-  for (sex in grupos_sexo) {
-    new_population[[sex]][["15-19"]][start_state_index] <-
-      new_population[[sex]][["15-19"]][start_state_index] + total_deaths / length(grupos_sexo)
-  }
+  #start_state_index <- which(states == "Chronic_Asymptomatic")
+  #for (sex in grupos_sexo) {
+  #  new_population[[sex]][["15-19"]][start_state_index] <-
+  #    new_population[[sex]][["15-19"]][start_state_index] + total_deaths /     #length(grupos_sexo)
+  #}
 
   # Save population state at this time step
   population_over_time[[t]] <- new_population
@@ -561,8 +561,8 @@ for (t in 1:horizon) {
       total_deaths_t <- total_deaths_t + deaths_from_group_t
 
       # Remove deaths
-      moved_pop[death_index] <- 0
-      stayed_pop[death_index] <- 0
+      #moved_pop[death_index] <- 0
+      #stayed_pop[death_index] <- 0
 
       # Calculate Chagas deaths
       cardiac_chagas_index <- which(states == "Cardiac")
@@ -581,7 +581,7 @@ for (t in 1:horizon) {
                                "50-54" = "55-59",
                                "55-59" = "60-64",
                                "60-64" = "65-69",
-                               "65-69" = "15-99",
+                               "65-69" = "70-74",
                                age  # If the age group is not in the switch statement, keep it
       )
 
@@ -595,11 +595,11 @@ for (t in 1:horizon) {
   }
   
   # Inject newborns into 15–19 group, Chronic_Asymptomatic state
-  start_state_index <- which(states == "Chronic_Asymptomatic")
-  for (sex in grupos_sexo) {
-    new_population_t[[sex]][["15-19"]][start_state_index] <-
-      new_population_t[[sex]][["15-19"]][start_state_index] + total_deaths_t / length(grupos_sexo)
-  }
+  #start_state_index <- which(states == "Chronic_Asymptomatic")
+  #for (sex in grupos_sexo) {
+  #  new_population_t[[sex]][["15-19"]][start_state_index] <-
+  #    new_population_t[[sex]][["15-19"]][start_state_index] + total_deaths_t   #length(grupos_sexo)
+  #}
 
   # Save population state at this time step
   population_over_time_t[[t]] <- new_population_t
@@ -667,9 +667,9 @@ qaly_weights <- c(
 )
 
 costs <- c(
-  Chronic_Asymptomatic = 478,
-  Cardiac = 11976.53,
-  Digestive = 858.82,
+  Chronic_Asymptomatic = 380.26,
+  Cardiac = 11592.27,
+  Digestive = 554.56,
   Death = 0
 )
 
@@ -690,6 +690,8 @@ qalys_costs_results_t <- calculate_qalys_costs(population_over_time_t, qaly_weig
 
 # Print results
 treat<-colSums(qalys_costs_results_t[,2:3])
+treat[2]<-treat[2]+966.07+128.52 # Adjustment for extra costs of follow-up and adverse effects management the first and second year
+treat[1]<-treat[1]-0.00215 # Disutilities reduction due to adverse effects
 treat
 ```
 
