@@ -2,47 +2,49 @@
 
 # Cost-effectiveness analysis of benznidazole for chronic indeterminate Chagas disease
 
-This repository contains the R code used to perform a cost-effectiveness evaluation of benznidazole for the treatment of chronic indeterminate Chagas disease. The analysis is based on a state-transition (Markov) model with calibrated transition parameters.
-All code is written in R; execution using RStudio is strongly recommended to facilitate script execution and visualization.
+This repository contains the R Markdown files used to perform a cost-effectiveness evaluation of benznidazole for the treatment of chronic indeterminate Chagas disease. The analysis is based on a state-transition (Markov) model with calibrated transition parameters.
+All code is written in R and implemented as R Markdown (.Rmd) documents. Execution using RStudio is strongly recommended.
 
 # Repository structure and execution workflow
 
-The analysis is organized into four main components that should be executed sequentially.
+The analysis is organized into four main components that should be executed sequentially. Each component is implemented as an R Markdown file, which can be run interactively or knitted in RStudio.
 
 ## 1. Model calibration
 
 Model parameters governing disease progression and mortality were calibrated to reproduce observed mortality due to Chagas disease.
 
-Step 1: Run BZN_Calib_01.R
-This script performs the parameter sampling and runs multiple model iterations.
+Step 1: Open and run BZN_Calib_01.Rmd
+This file performs parameter sampling and executes multiple model iterations.
 
-Step 2: Run BZN_Calib.R
-This script evaluates calibration results and provides graphical outputs to identify the parameter set that best reproduces observed epidemiological data.
+Step 2: Open and run BZN_Calib.Rmd
+This file evaluates calibration results and provides graphical outputs to identify the parameter set that best reproduces observed epidemiological data.
 
-The calibrated parameter set is then used in all subsequent analyses.
+The calibrated parameter set generated in this step is used in all subsequent analyses.
 
 ## 2. Cost-effectiveness analysis (CEA)
 
-Run BZN_CEA_01.R
+Open and run BZN_CEA_01.Rmd
 
-This script performs the base-case deterministic cost-effectiveness analysis using the calibrated parameters and reports costs, health outcomes, and incremental cost-effectiveness results.
+This file performs the base-case deterministic cost-effectiveness analysis using the calibrated parameters and reports total and incremental costs and health outcomes.
 
 ## 3. One-way sensitivity analysis (OWSA)
 
-Run BZN_OWA.R
+Open and run BZN_OWA.Rmd
 
-This script evaluates the impact of individual parameter uncertainty on model results by varying one parameter at a time over predefined ranges.
+This file evaluates the impact of individual parameter uncertainty on model results by varying one parameter at a time over predefined ranges.
 
 ## 4. Probabilistic sensitivity analysis (PSA)
 
-Run BZN_PSA.R
+Open and run BZN_PSA.Rmd
 
-This script performs the probabilistic sensitivity analysis by simultaneously sampling parameters from their assigned probability distributions and generating uncertainty estimates for costs and outcomes.
+This file performs the probabilistic sensitivity analysis by simultaneously sampling parameters from their assigned probability distributions and generating uncertainty estimates for costs and outcomes.
 
 # Notes
 
-Scripts are intended to be executed in the order described above.
+Files should be executed in the order described above.
 
-Parameter definitions, ranges, and calibration rationale are described in the Supplementary Material of the manuscript.
+Each R Markdown file can be run chunk-by-chunk or knitted to HTML/PDF to reproduce results.
 
-All analyses rely on the calibrated parameter set generated during the calibration step.
+Parameter definitions, calibration rationale, and uncertainty ranges are described in the Supplementary Material of the manuscript.
+
+All analyses rely on the calibrated parameter set obtained during the calibration stage.erated during the calibration step.
