@@ -368,7 +368,7 @@ fig2<-ggplot(tornado_df) +
   labs(
     title = "Tornado Plot of ICER",
     x = "Parameter",
-    y = "ICER (2023€ per QALY)"
+    y = "ICER (2025€ per QALY)"
   ) +
   theme_minimal() +
   theme(legend.position = "none")

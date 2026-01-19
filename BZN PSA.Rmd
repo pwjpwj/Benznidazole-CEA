@@ -120,7 +120,7 @@ fig3<-ggplot(PSADAT_df, aes(x = AQALYs, y = ACosts)) +
   labs(
     title = "Cost-Effectiveness Plane",
     x = expression(Delta~"QALYs"),
-    y = expression(Delta~"Costs (2023€)")
+    y = expression(Delta~"Costs (2025€)")
   ) +
   stat_ellipse()+
   theme_minimal()
@@ -154,7 +154,7 @@ fig4<-ggplot(ceac_data, aes(x = WTP, y = CE_Probability)) +
   ylim(0,1) +
   labs(
     title = "Cost-Effectiveness Acceptability Curve (CEAC)",
-    x = "Willingness-to-pay Threshold (2023€ per QALY)",
+    x = "Willingness-to-pay Threshold (2025€ per QALY)",
     y = "Probability Cost-Effective"
   ) +
   theme_minimal()
