@@ -113,7 +113,7 @@ quantile(PSADAT_df$ICER,c(0.05,0.95))
 ```{r}
 library(ggplot2)
 
-ggplot(PSADAT_df, aes(x = AQALYs, y = ACosts)) +
+fig3<-ggplot(PSADAT_df, aes(x = AQALYs, y = ACosts)) +
   geom_point(color = "blue", alpha = 0.6) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
   geom_vline(xintercept = 0, linetype = "dashed", color = "grey40") +
@@ -124,7 +124,13 @@ ggplot(PSADAT_df, aes(x = AQALYs, y = ACosts)) +
   ) +
   stat_ellipse()+
   theme_minimal()
+fig3
+```
 
+```{r}
+pdf("PSA.pdf", width=7, height=5)
+fig3
+dev.off()
 ```
 
 ```{r}
@@ -143,7 +149,7 @@ ceac_data <- data.frame(
 )
 
 # Plot CEAC
-CEPC<-ggplot(ceac_data, aes(x = WTP, y = CE_Probability)) +
+fig4<-ggplot(ceac_data, aes(x = WTP, y = CE_Probability)) +
   geom_line(color = "darkgreen", linewidth = 1) +
   ylim(0,1) +
   labs(
@@ -152,8 +158,14 @@ CEPC<-ggplot(ceac_data, aes(x = WTP, y = CE_Probability)) +
     y = "Probability Cost-Effective"
   ) +
   theme_minimal()
+fig4
+```
 
-#jpeg("CEPC.jpeg", width=1000, height=1000, res=300, units="px")
-CEPC
-#dev.off()
+```{r}
+pdf("CEPC.pdf", width=7, height=5)
+fig4
+dev.off()
+```
+```{r}
+ceac_data
 ```

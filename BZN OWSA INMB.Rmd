@@ -79,10 +79,10 @@ population_over_time_t<-Simulate_t(P_card=0.03, CaMorR=CaMorR, DiMorR=DiMorR, P_
 # Calculate Qalys and costs 
 
 ```{r}
-Det_CEA_H<-QalyCost(population_over_time, population_over_time_t)
+Det_CEA_H_1<-QalyCost(population_over_time, population_over_time_t)
 
 
-Det_CEA_H
+Det_CEA_H_1
 ```
 ## low value
 ```{r}
@@ -94,12 +94,12 @@ population_over_time_t<-Simulate_t(P_card=0.01, CaMorR=CaMorR, DiMorR=DiMorR, P_
 ```
  
 ```{r}
-Det_CEA_L<-QalyCost(population_over_time, population_over_time_t)
-Det_CEA_L
+Det_CEA_L_1<-QalyCost(population_over_time, population_over_time_t)
+Det_CEA_L_1
 ```
 
 ```{r}
-OWSADAT[1,]<-c("P_card", Det_CEA_H$ICER[2], Det_CEA_L$ICER[2])
+OWSADAT[1,]<-c("P_card", Det_CEA_H_1$ICER[2], Det_CEA_L_1$ICER[2])
 OWSADAT
 ```
 
@@ -127,8 +127,8 @@ population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=5, DiMorR=DiMorR, P_dig
 # Calculate Qalys and costs 
 
 ```{r}
-Det_CEA_H<-QalyCost(population_over_time, population_over_time_t)
-Det_CEA_H
+Det_CEA_H_2<-QalyCost(population_over_time, population_over_time_t)
+Det_CEA_H_2
 ```
 ## low value
 ```{r}
@@ -140,12 +140,12 @@ population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=1.1, DiMorR=DiMorR, P_d
 ```
  
 ```{r}
-Det_CEA_L<-QalyCost(population_over_time, population_over_time_t)
-Det_CEA_L
+Det_CEA_L_2<-QalyCost(population_over_time, population_over_time_t)
+Det_CEA_L_2
 ```
 
 ```{r}
-OWSADAT[2,]<-c("CaMorR", Det_CEA_H$ICER[2], Det_CEA_L$ICER[2])
+OWSADAT[2,]<-c("CaMorR", Det_CEA_H_2$ICER[2], Det_CEA_L_2$ICER[2])
 OWSADAT
 ```
 
@@ -173,8 +173,8 @@ population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=CaMorR, DiMorR=2.5, P_d
 # Calculate Qalys and costs 
 
 ```{r}
-Det_CEA_H<-QalyCost(population_over_time, population_over_time_t)
-Det_CEA_H
+Det_CEA_H_3<-QalyCost(population_over_time, population_over_time_t)
+Det_CEA_H_3
 ```
 ## low value
 ```{r}
@@ -186,12 +186,12 @@ population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=CaMorR, DiMorR=1, P_dig
 ```
  
 ```{r}
-Det_CEA_L<-QalyCost(population_over_time, population_over_time_t)
-Det_CEA_L
+Det_CEA_L_3<-QalyCost(population_over_time, population_over_time_t)
+Det_CEA_L_3
 ```
 
 ```{r}
-OWSADAT[3,]<-c("DiMorR", Det_CEA_H$ICER[2], Det_CEA_L$ICER[2])
+OWSADAT[3,]<-c("DiMorR", Det_CEA_H_3$ICER[2], Det_CEA_L_3$ICER[2])
 OWSADAT
 ```
 
@@ -219,8 +219,8 @@ population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, 
 # Calculate Qalys and costs 
 
 ```{r}
-Det_CEA_H<-QalyCost(population_over_time, population_over_time_t)
-Det_CEA_H
+Det_CEA_H_4<-QalyCost(population_over_time, population_over_time_t)
+Det_CEA_H_4
 ```
 ## low value
 ```{r}
@@ -232,12 +232,12 @@ population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, 
 ```
  
 ```{r}
-Det_CEA_L<-QalyCost(population_over_time, population_over_time_t)
-Det_CEA_L
+Det_CEA_L_4<-QalyCost(population_over_time, population_over_time_t)
+Det_CEA_L_4
 ```
 
 ```{r}
-OWSADAT[4,]<-c("P_dig", Det_CEA_H$ICER[2], Det_CEA_L$ICER[2])
+OWSADAT[4,]<-c("P_dig", Det_CEA_H_4$ICER[2], Det_CEA_L_4$ICER[2])
 OWSADAT
 ```
 
@@ -257,14 +257,14 @@ population_over_time<-Simulate(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_di
 ### Simulating the treatment arm
 
 ```{r}
-population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=P_dig, RR_T_car=1, RR_T_dig=0.9, horizon=20)
+population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, P_dig=P_dig, RR_T_car=1.18, RR_T_dig=0.9, horizon=20)
 ```
 
 # Calculate Qalys and costs 
 
 ```{r}
-Det_CEA_H<-QalyCost(population_over_time, population_over_time_t)
-Det_CEA_H
+Det_CEA_H_5<-QalyCost(population_over_time, population_over_time_t)
+Det_CEA_H_5
 ```
 ## low value
 ```{r}
@@ -276,12 +276,12 @@ population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, 
 ```
  
 ```{r}
-Det_CEA_L<-QalyCost(population_over_time, population_over_time_t)
-Det_CEA_L
+Det_CEA_L_5<-QalyCost(population_over_time, population_over_time_t)
+Det_CEA_L_5
 ```
 
 ```{r}
-OWSADAT[5,]<-c("RR_T_car", Det_CEA_H$ICER[2], Det_CEA_L$ICER[2])
+OWSADAT[5,]<-c("RR_T_car", Det_CEA_H_5$ICER[2], Det_CEA_L_5$ICER[2])
 OWSADAT
 ```
 
@@ -307,8 +307,8 @@ population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, 
 # Calculate Qalys and costs 
 
 ```{r}
-Det_CEA_H<-QalyCost(population_over_time, population_over_time_t)
-Det_CEA_H
+Det_CEA_H_6<-QalyCost(population_over_time, population_over_time_t)
+Det_CEA_H_6
 ```
 ## low value
 ```{r}
@@ -320,11 +320,11 @@ population_over_time_t<-Simulate_t(P_card=P_card, CaMorR=CaMorR, DiMorR=DiMorR, 
 ```
  
 ```{r}
-Det_CEA_L<-QalyCost(population_over_time, population_over_time_t)
-Det_CEA_L
+Det_CEA_L_6<-QalyCost(population_over_time, population_over_time_t)
+Det_CEA_L_6
 ```
 ```{r}
-OWSADAT[6,]<-c("RR_T_dig", Det_CEA_H$ICER[2], Det_CEA_L$ICER[2])
+OWSADAT[6,]<-c("RR_T_dig", Det_CEA_H_6$ICER[2], Det_CEA_L_6$ICER[2])
 ```
 
 
@@ -375,7 +375,106 @@ fig2<-ggplot(tornado_df) +
 fig2
 ```
 ```{r}
-pdf("OWSA.pdf", width=7, height=5)
+#pdf("OWSA.pdf", width=7, height=5)
 fig2
+#dev.off()
+```
+
+```{r}
+# ---- 1) Build a tidy one-way dataset with ΔC, ΔQ, ICER for each bound ----
+# Assumes QalyCost() returns columns named DeltaCost, DeltaQALY, ICER;
+# if your names differ, change them below.
+# Coerce matrix -> data.frame and keep strings as strings
+OWSADAT <- as.data.frame(OWSADAT, stringsAsFactors = FALSE)
+
+# Clean non-numeric placeholders and convert ICER columns to numeric
+to_numeric_icers <- function(x) {
+  x[ x %in% c("", "NA", "NaN", "Inf", "-Inf", "Dominated") ] <- NA
+  suppressWarnings(as.numeric(x))
+}
+
+OWSADAT$ICER_high <- to_numeric_icers(OWSADAT$ICER_high)
+OWSADAT$ICER_low  <- to_numeric_icers(OWSADAT$ICER_low)
+
+# Ensure Parameter is plain character (or factor later if you like)
+OWSADAT$Parameter <- as.character(OWSADAT$Parameter)
+
+# (Optional sanity check)
+str(OWSADAT)
+
+
+
+mk_row <- function(param, bound, res){
+  tibble::tibble(
+    Parameter = param,
+    bound = bound,
+    dC = as.numeric(res$ACosts[2]),
+    dQ = as.numeric(res$AQALYs[2]),
+    ICER = as.numeric(res$ICER[2]),
+    dominated = dC > 0 & dQ < 0
+  )
+}
+
+owsa_long <- dplyr::bind_rows(
+  mk_row("P_card",  "high", Det_CEA_H_1),
+  mk_row("P_card",  "low",  Det_CEA_L_1),
+  mk_row("CaMorR",  "high", Det_CEA_H_2),
+  mk_row("CaMorR",  "low",  Det_CEA_L_2),
+  mk_row("DiMorR",  "high", Det_CEA_H_3),
+  mk_row("DiMorR",  "low",  Det_CEA_L_3),
+  mk_row("P_dig",   "high", Det_CEA_H_4),
+  mk_row("P_dig",   "low",  Det_CEA_L_4),
+  mk_row("RR_T_car","high", Det_CEA_H_5),
+  mk_row("RR_T_car","low",  Det_CEA_L_5),
+  mk_row("RR_T_dig","high", Det_CEA_H_6),
+  mk_row("RR_T_dig","low",  Det_CEA_L_6)
+) |>
+  dplyr::mutate(
+    Parameter = dplyr::case_when(
+      Parameter == "P_card"   ~ "Prob cardiac disease",
+      Parameter == "CaMorR"   ~ "Cardiac mortality rate",
+      Parameter == "DiMorR"   ~ "Digestive mortality rate",
+      Parameter == "P_dig"    ~ "Prob digestive disease",
+      Parameter == "RR_T_car" ~ "Risk reduction cardiac disease",
+      Parameter == "RR_T_dig" ~ "Risk reduction digestive disease",
+      TRUE ~ Parameter
+    )
+  )
+
+# ---- 2) Compute INMB and make the tornado ----
+lambda <- WTP  # you already set WTP <- 33895
+tornado_inmb <- owsa_long %>%
+  mutate(INMB = lambda * dQ - dC) %>%
+  dplyr::select(Parameter, bound, INMB) %>%                       # keep only what's needed
+  tidyr::pivot_wider(
+    id_cols   = Parameter,                                  # <-- key fix
+    names_from  = bound,
+    values_from = INMB
+  ) %>%
+  mutate(
+    lo    = pmin(low, high, na.rm = TRUE),
+    hi    = pmax(low, high, na.rm = TRUE),
+    width = abs(hi - lo)
+  ) %>%
+  arrange(width) %>%
+  mutate(Parameter = factor(Parameter, levels = Parameter))
+
+fig_2<-ggplot(tornado_inmb) +
+  geom_segment(aes(y = Parameter, yend = Parameter, x = lo, xend = hi, color=Parameter), linewidth = 6) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  labs(
+    title = "         One-way sensitivity analysis of 
+    incremental net monetary benefit (INMB)",
+    x = paste0("INMB (€) at lambda = €", format(lambda, big.mark=",")),
+    y = NULL
+  ) +
+  theme_minimal()+
+  theme(legend.position="none")
+fig_2
+```
+
+```{r}
+pdf("OWSA.pdf", width=7, height=5)
+fig_2
 dev.off()
 ```
